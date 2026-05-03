@@ -1,0 +1,27 @@
+# Environment and secret files
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Common credential / key material
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+*.secret
+*.secrets
+credentials.json
+**/credentials.json
+**/*credentials*.json
+service-account*.json
+**/service-account*.json
+
+# Local tooling / logs
+*.log
+.DS_Store
+node_modules/
+dist/
+build/

@@ -1,0 +1,52 @@
+/* Verdict Badge */
+.verdict-badge {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.verdict-true {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.verdict-true:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.verdict-false {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.verdict-false:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.verdict-uncertain {
+  background: rgba(250, 204, 21, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+}
+
+.verdict-uncertain:hover {
+  background: rgba(250, 204, 21, 0.18);
+  border-color: rgba(250, 204, 21, 0.5);
+}
+
+.verdict-unknown {
+  background: rgba(107, 114, 128, 0.12);
+  color: #9ca3af;
+  border: 1px solid rgba(107, 114, 128, 0.35);
+}
+

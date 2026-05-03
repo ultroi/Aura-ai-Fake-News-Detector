@@ -1,0 +1,273 @@
+/* Settings Modal */
+.settings-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.settings-modal {
+  background: #1a1a1f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-modal-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.settings-modal-close {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.settings-modal-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.settings-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-section-title {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2a2a2f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.settings-option:hover {
+  background: #323237;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.settings-option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #d1d5db;
+  width: 36px;
+  height: 36px;
+}
+
+.settings-option-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-option-content h3 {
+  margin: 0 0 2px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.settings-option-content p {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.3;
+}
+
+.settings-option-arrow {
+  flex-shrink: 0;
+  color: #6b7280;
+  font-size: 18px;
+}
+
+/* Nested Modal (Privacy Policy / Subscription) */
+.nested-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  border-radius: 16px;
+}
+
+.nested-modal-content {
+  background: #1a1a1f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 85%;
+  max-width: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal Styles */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-body {
+  padding: 16px 20px;
+  color: #d1d5db;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+/* Scrollbar */
+.settings-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.settings-modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+@media (max-width: 640px) {
+  .settings-modal {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .settings-modal-header {
+    padding: 16px;
+  }
+
+  .settings-modal-header h1 {
+    font-size: 18px;
+  }
+
+  .settings-modal-content {
+    padding: 16px;
+  }
+
+  .settings-option {
+    padding: 10px;
+  }
+
+  .settings-option-content h3 {
+    font-size: 13px;
+  }
+
+  .settings-option-content p {
+    font-size: 11px;
+  }
+
+  .nested-modal-content {
+    width: 90%;
+  }
+}

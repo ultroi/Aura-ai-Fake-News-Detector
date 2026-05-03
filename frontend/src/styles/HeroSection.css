@@ -1,0 +1,36 @@
+.initial-container {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.welcome-screen {
+  text-align: center;
+  max-width: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.welcome-screen h2 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.welcome-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.main-input-area {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}

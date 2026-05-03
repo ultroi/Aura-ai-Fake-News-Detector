@@ -1,0 +1,114 @@
+/* Sources List */
+.sources-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.sources-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sources-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sources-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.sources-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 92, 255, 0.4);
+}
+
+/* Source Item */
+.source-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.source-item:hover {
+  background: rgba(124, 92, 255, 0.12);
+  border-color: rgba(124, 92, 255, 0.3);
+  color: var(--accent-secondary);
+  transform: translateX(2px);
+}
+
+.source-item--plain {
+  cursor: default;
+}
+
+.source-item--plain:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.source-icon {
+  font-size: 16px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.source-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.source-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.source-url {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source-arrow {
+  font-size: 14px;
+  opacity: 0.6;
+  flex-shrink: 0;
+  transition: opacity 0.3s ease;
+}
+
+.source-item:hover .source-arrow {
+  opacity: 1;
+}
+
+@media (max-width: 600px) {
+  .source-item {
+    padding: 10px 12px;
+  }
+
+  .source-title {
+    font-size: 12px;
+  }
+
+  .source-url {
+    font-size: 10px;
+  }
+}
