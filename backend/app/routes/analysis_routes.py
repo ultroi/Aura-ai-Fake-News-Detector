@@ -369,6 +369,22 @@ async def analyze_claim(request: Request, payload: AnalysisRequest):
         if analysis_result and analysis_result.get("reason"):
             # Verdict is already in user-friendly format from Stage 4
             conversational_response = analysis_result.get("reason")
+        elif mode == "research":
+            # Research mode needs explanatory output (no verdict path)
+            conversational_response = await response_generator.generate_response(
+                user_input=payload.query or main_claim,
+                mode=mode,
+                extracted_claims=extracted_claims,
+                research_topic=research_topic,
+                search_results=usable_sources,
+                source_credibility=credibility_eval,
+                detected_language=detected_lang,
+                verdict=verdict,
+                confidence=confidence,
+                analysis_reason=None,
+            )
+            if not conversational_response:
+                conversational_response = _build_fallback_response(verdict, analysis_result, usable_sources, detected_lang)
         else:
             # Fallback: Build simple response from verdict
             conversational_response = _build_fallback_response(verdict, analysis_result, usable_sources, detected_lang)
@@ -548,6 +564,7 @@ async def verify_claim(request: VerifyRequest):
         
         # Format verdict message naturally - like ChatGPT explains
         verdict_display_map = {
+            "true": "✅ This claim is **verified as true**.",
             "verified_true": "✅ This claim is **verified as true**.",
             "likely_true": "✔️ This claim is **likely true** based on available evidence.",
             "misleading": "⚠️ This claim is **misleading** - it contains partial truths but lacks important context.",
