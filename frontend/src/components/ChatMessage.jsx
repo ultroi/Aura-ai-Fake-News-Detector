@@ -4,11 +4,20 @@ import { Copy, RefreshCcw, Check } from 'lucide-react';
 import SourcesList from './SourcesList';
 import '../styles/ChatMessage.css';
 
-function ChatMessage({ message, onRetry }) {
+function ChatMessage({ message, onRetry, onStop }) {
   const [showSources, setShowSources] = useState(true);
   const [copied, setCopied] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(() => {
+    if (message.role === 'user') return true;
+    try {
+      const stored = localStorage.getItem('aura_animated_messages');
+      return stored ? JSON.parse(stored).includes(message.id) : false;
+    } catch {
+      return false;
+    }
+  });
   const typingTimeout = useRef(null);
   const isUser = message.role === 'user';
   const isLoading = message.isLoading;
@@ -47,17 +56,36 @@ function ChatMessage({ message, onRetry }) {
 
   useEffect(() => {
     if (!isUser && !isLoading && !isError && message.content) {
+      if (hasAnimated) {
+        setTypedText(message.content);
+        setIsTyping(false);
+        return;
+      }
+
       setTypedText('');
       setIsTyping(true);
       let index = 0;
       const text = message.content;
+
+      const finishTyping = () => {
+        setIsTyping(false);
+        setHasAnimated(true);
+        try {
+          const stored = localStorage.getItem('aura_animated_messages');
+          const ids = stored ? JSON.parse(stored) : [];
+          const uniqueIds = Array.from(new Set([...ids, message.id]));
+          localStorage.setItem('aura_animated_messages', JSON.stringify(uniqueIds));
+        } catch {
+          // Ignore storage errors
+        }
+      };
 
       const tick = () => {
         index += 1;
         setTypedText(text.slice(0, index));
 
         if (index >= text.length) {
-          setIsTyping(false);
+          finishTyping();
           return;
         }
 
@@ -88,7 +116,17 @@ function ChatMessage({ message, onRetry }) {
         window.clearTimeout(typingTimeout.current);
       }
     };
-  }, [message.content, isUser, isLoading, isError]);
+  }, [message.content, isUser, isLoading, isError, hasAnimated, message.id]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('aura_animated_messages');
+      const ids = stored ? JSON.parse(stored) : [];
+      setHasAnimated(ids.includes(message.id));
+    } catch {
+      setHasAnimated(false);
+    }
+  }, [message.id]);
 
   return (
     <motion.div
@@ -98,10 +136,12 @@ function ChatMessage({ message, onRetry }) {
       transition={{ duration: 0.25 }}
     >
       {isLoading ? (
-        <div className="typing-indicator">
-          <span />
-          <span />
-          <span />
+        <div className="typing-indicator-wrapper">
+          <div className="typing-indicator">
+            <span />
+            <span />
+            <span />
+          </div>
         </div>
       ) : (
         <>
@@ -122,7 +162,28 @@ function ChatMessage({ message, onRetry }) {
             {isTyping && !isUser ? (
               <div className="message-content typing-text">{typedText}</div>
             ) : (
-              <div className="message-content" dangerouslySetInnerHTML={renderContent(message.content)} />
+              <>
+                {!isUser && message.shortSummary && (
+                  <div className="assistant-summary">
+                    <strong>{message.shortSummary}</strong>
+                  </div>
+                )}
+                <div className="message-content" dangerouslySetInnerHTML={renderContent(message.content)} />
+                {!isUser && message.reason && message.reason !== message.content && (
+                  <div className="assistant-reasoning">
+                    <div className="reasoning-label">Explanation / Evidence:</div>
+                    <div className="reasoning-text" dangerouslySetInnerHTML={renderContent(message.reason)} />
+                  </div>
+                )}
+              </>
+            )}
+
+            {!isUser && message.sourceUrl && (
+              <div className="source-url-section">
+                <a href={message.sourceUrl} target="_blank" rel="noopener noreferrer" className="source-url-link">
+                  📄 Analyzed from: {new URL(message.sourceUrl).hostname}
+                </a>
+              </div>
             )}
 
             {!isUser && !isError && message.sources && message.sources.length > 0 && (

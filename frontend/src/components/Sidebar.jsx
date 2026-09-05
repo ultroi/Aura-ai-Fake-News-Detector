@@ -146,7 +146,11 @@ const Sidebar = ({ conversations, activeConversationId, onStartNewChat, onOpenCo
                           })}
                         </span>
                       </div>
-                      <div className="chat-item-actions">
+                      <div
+                        className="chat-item-actions"
+                        onClick={(event) => event.stopPropagation()}
+                        onMouseDown={(event) => event.stopPropagation()}
+                      >
                         <button
                           className="chat-item-menu"
                           onClick={(event) => {
@@ -160,7 +164,11 @@ const Sidebar = ({ conversations, activeConversationId, onStartNewChat, onOpenCo
                         </button>
 
                         {menuOpenId === conversation.id && (
-                          <div className="chat-menu-dropdown">
+                          <div
+                            className="chat-menu-dropdown"
+                            onClick={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          >
                             {pendingRenameId === conversation.id ? (
                               <div className="chat-rename-confirmation">
                                 <label className="chat-rename-label" htmlFor={`rename-${conversation.id}`}>

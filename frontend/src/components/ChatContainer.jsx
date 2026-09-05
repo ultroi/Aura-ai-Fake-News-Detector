@@ -10,7 +10,7 @@ const SUGGESTION_PROMPTS = [
   '5G causes COVID-19',
 ];
 
-function ChatContainer({ messages, onSendMessage, onRetry }) {
+function ChatContainer({ messages, onSendMessage, onRetry, onStop }) {
   const hasStarted = messages.length > 0;
   const endRef = useRef(null);
   
@@ -53,7 +53,12 @@ function ChatContainer({ messages, onSendMessage, onRetry }) {
           transition={{ duration: 0.35, ease: 'easeOut' }}
         >
           {messages.map((msg) => (
-            <ChatMessage key={msg.id} message={msg} onRetry={() => onRetry(msg.id)} />
+            <ChatMessage
+              key={msg.id}
+              message={msg}
+              onRetry={() => onRetry(msg.id)}
+              onStop={onStop}
+            />
           ))}
           <div ref={endRef} />
         </motion.div>

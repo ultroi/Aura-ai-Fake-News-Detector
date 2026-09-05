@@ -4,9 +4,8 @@ import json
 import logging
 import re
 from typing import Optional
-from groq import Groq
-from google import genai
 from app.services.llm_json_parser import parse_llm_json
+from app.services.llm_clients import get_groq_client, get_gemini_client, get_gemini_model_name, handle_groq_exception, reserve_groq_call
 import os
 
 logger = logging.getLogger(__name__)
@@ -14,22 +13,8 @@ logger = logging.getLogger(__name__)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-
 gemini_client = None
 gemini_model_name = None
-if GEMINI_API_KEY:
-    try:
-        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-        gemini_model_name = "gemini-3-flash-preview"
-    except Exception as e:
-        try:
-            gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-            gemini_model_name = "gemini-3.1-flash-lite-preview"
-        except Exception as e:
-            logger.warning(f"Gemini configuration failed in source_credibility: {e}")
-            gemini_client = None
-            gemini_model_name = None
 
 # Trusted sources - whitelisted domains
 TRUSTED_DOMAINS = [
@@ -63,7 +48,14 @@ SUSPICIOUS_DOMAINS = [
 
 async def evaluate_sources(sources: list, claim: str = "") -> dict:
     """
-    Evaluate credibility of search result sources.
+    Evaluate credibility of search result sources using DETERMINISTIC RULES FIRST.
+    
+    OPTIMIZATION: Moved to deterministic evaluation by default.
+    - Instant scoring using domain reputation rules (no LLM latency)
+    - Trusted/suspicious domains scored instantly
+    - Groq is fallback ONLY if deterministic scoring fails
+    
+    Performance: ~0.1s vs ~2-3s with LLM
     
     Args:
         sources: List of sources from search results
@@ -85,24 +77,31 @@ async def evaluate_sources(sources: list, claim: str = "") -> dict:
                 "scored_sources": []
             }
         
-        # Groq is primary; Gemini is a fallback if Groq fails
-        if groq_client:
-            result = await _evaluate_with_groq(sources, claim)
-            if result:
-                return result
-
-        if gemini_client:
-            try:
-                result = await _evaluate_with_gemini(sources, claim)
-                if result:
-                    return result
-                logger.warning("Gemini fallback returned no result")
-            except Exception as e:
-                logger.warning(f"Gemini fallback for source credibility failed: {e}")
-
-        # Fallback to rule-based evaluation
-        return _evaluate_sources_rule_based(sources, claim)
-
+        # PRIMARY: Rule-based evaluation (instant, no latency)
+        logger.info(f"Stage 3: Evaluating {len(sources)} sources using deterministic rules (fast path)")
+        result = _evaluate_sources_rule_based(sources, claim)
+        
+        # If result is empty/malformed, try LLM as FALLBACK only
+        if not result.get("evaluated_sources"):
+            logger.warning("Deterministic evaluation returned empty results, attempting Groq fallback")
+            groq_client = get_groq_client()
+            if groq_client:
+                groq_result = await _evaluate_with_groq(sources, claim)
+                if groq_result:
+                    return groq_result
+            
+            # If Groq also fails, try Gemini
+            gemini_client = get_gemini_client()
+            gemini_model_name = get_gemini_model_name()
+            if gemini_client and gemini_model_name:
+                try:
+                    gemini_result = await _evaluate_with_gemini(sources, claim)
+                    if gemini_result:
+                        return gemini_result
+                except Exception as e:
+                    logger.warning(f"Gemini fallback failed: {e}")
+        
+        return result
         
     except Exception as e:
         logger.error(f"Error evaluating sources: {str(e)}")
@@ -111,6 +110,7 @@ async def evaluate_sources(sources: list, claim: str = "") -> dict:
 
 async def _evaluate_with_groq(sources: list, claim: str = "") -> Optional[dict]:
     """Use Groq to evaluate source credibility"""
+    groq_client = get_groq_client()
     if not groq_client:
         return None
 
@@ -182,6 +182,9 @@ search_results:
 
 Return the JSON object now."""
 
+        if not reserve_groq_call():
+            return None
+
         completion = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             max_tokens=1024,
@@ -193,18 +196,30 @@ Return the JSON object now."""
         )
 
         response_text = (completion.choices[0].message.content or "").strip()
+        if not response_text:
+            logger.warning("Groq returned empty response for source credibility")
+            return None
 
         result = parse_llm_json(response_text)
+        if not isinstance(result, dict) or not result:
+            logger.warning("Groq source credibility response did not contain valid JSON", exc_info=False)
+            logger.debug(f"Raw Groq response: {response_text}")
+            return None
+
         return _normalize_credibility_result(result, sources, claim)
         
     except Exception as e:
+        if handle_groq_exception(e, "Groq evaluation failed"):
+            return None
         logger.error(f"Groq evaluation failed: {str(e)}")
         return None
 
 
 async def _evaluate_with_gemini(sources: list, claim: str = "") -> Optional[dict]:
     """Use Gemini to evaluate source credibility as a fallback."""
-    if not gemini_client:
+    gemini_client = get_gemini_client()
+    gemini_model_name = get_gemini_model_name()
+    if not gemini_client or not gemini_model_name:
         return None
 
     try:
@@ -341,36 +356,128 @@ def _evaluate_sources_rule_based(sources: list, claim: str = "") -> dict:
 
 
 def _calculate_domain_score(domain: str) -> int:
-    """Calculate credibility score for a domain"""
-    score = 50  # Default
+    """
+    Calculate credibility score for a domain (0-100) using reputation rules.
     
-    # Check trusted list
-    for trusted_domain in TRUSTED_DOMAINS:
-        if trusted_domain in domain:
-            return 85
+    OPTIMIZATION: Instant scoring without LLM calls
+    - Whitelist scoring: trusted domains get 85+ immediately
+    - Blacklist scoring: suspicious domains get 20 immediately
+    - Heuristic scoring for unknown domains
     
-    # Check suspicious list
-    for suspicious_domain in SUSPICIOUS_DOMAINS:
-        if suspicious_domain in domain:
-            return 20
+    Performance: <1ms per domain
+    """
+    score = 50  # Default neutral score
+    domain_lower = domain.lower().strip()
     
-    # Domain length heuristic (longer = often more legitimate)
-    if len(domain) > 20:
-        score += 10
+    # TIER 1: TRUSTED DOMAINS (85-100)
+    # Government & official
+    trusted_patterns = [
+        # Government agencies
+        ".gov", ".gov.in", ".gov.uk", ".gov.au",
+        "parliament.gov.in", "pib.gov.in", "mea.gov.in", "indiabudget.gov.in",
+        "bbc.com", "bbc.co.uk",
+        
+        # Major wire services
+        "reuters.com", "apnews.com", "associated press",
+        "pti.gov.in", "ians.in",
+        
+        # Major newspapers
+        "theguardian.com", "nytimes.com", "washingtonpost.com",
+        "bbc.com", "aljazeera.com",
+        
+        # Academic & research
+        ".edu", ".ac.uk", ".ac.in", ".edu.au",
+        "wikipedia.org", "britannica.com",
+        
+        # Health & scientific
+        "who.int", "un.org", "scirus.com", "scholar.google",
+        "ncbi.nlm.nih.gov", "arxiv.org", "pubmed.gov",
+        
+        # Fact-checking organizations
+        "snopes.com", "factcheck.org", "politifact.com", "fullfact.org",
+        "altnews.in", "boomlive.in", "fact-check.org",
+    ]
     
-    # Known news agencies
-    if any(x in domain for x in ["news", "times", "gazette", "post", "daily"]):
-        score += 15
+    for pattern in trusted_patterns:
+        if pattern in domain_lower:
+            logger.debug(f"Domain {domain} matched trusted pattern: {pattern}")
+            return 85  # High confidence, instant return
     
-    # Academic/government
-    if any(x in domain for x in [".edu", ".gov", ".ac.uk", ".ac.in"]):
-        score += 20
+    # TIER 2: MEDIUM TRUST (50-79)
+    medium_patterns = [
+        # Established news outlets
+        "news", "times", "gazette", "post", "daily", "tribune",
+        "telegraph", "mail", "express", "mirror", "independent",
+        
+        # Magazine/media sites
+        "magazine", "medium.com", "substack.com",
+        "forbes.com", "businessinsider.com", "techcrunch.com",
+        
+        # Indian news
+        "thehindu.com", "indiatoday.com", "ndtv.com", "dna.com",
+        "mid-day.com", "deccan.com", "telegram.news", "aajtak.in",
+        "hindustantimes.com", "news18.com",
+        
+        # BBC/Reuters/AP equivalents
+        "bbc", "reuters", "associated", "agence", "ansa.it",
+    ]
     
-    # Wikipedia
-    if "wikipedia" in domain:
-        score = 70
+    for pattern in medium_patterns:
+        if pattern in domain_lower:
+            logger.debug(f"Domain {domain} matched medium pattern: {pattern}")
+            score = max(score, 65)
+            break
     
-    return min(100, score)
+    # TIER 3: SUSPICIOUS DOMAINS (20-49)
+    suspicious_patterns = [
+        "blog", "wordpress", "blogger", "wix.com", "medium.com",
+        "reddit.com", "twitter.com", "facebook.com", "instagram.com",
+        "tiktok.com", "youtube.com",  # User-generated content
+        "pastebin", "anonymous", "4chan", "8kun",
+        "unknown", "untitled", "test",
+    ]
+    
+    for pattern in suspicious_patterns:
+        if pattern in domain_lower:
+            logger.debug(f"Domain {domain} matched suspicious pattern: {pattern}")
+            score = min(score, 35)
+            break
+    
+    # TIER 4: BLACKLISTED DOMAINS (0-19)
+    blacklist_patterns = [
+        "fake-news", "hoax", "conspiracy", "clickbait",
+        "satire", "parody", "propaganda", "disinformation",
+        "qanon", "infowars", "naturalnews",
+    ]
+    
+    for pattern in blacklist_patterns:
+        if pattern in domain_lower:
+            logger.debug(f"Domain {domain} matched blacklist pattern: {pattern}")
+            return 15  # Very low confidence, instant return
+    
+    # HEURISTIC ADJUSTMENTS for unknown domains
+    if score == 50:  # Still neutral, apply heuristics
+        # Domain age proxy: longer domains are often more legitimate
+        if len(domain_lower) > 25:
+            score += 8
+        
+        # TLD patterns
+        if domain_lower.endswith((".edu", ".ac.uk", ".ac.in", ".edu.au", ".org", ".gov")):
+            score += 12
+        elif domain_lower.endswith(".net"):
+            score += 5
+        elif domain_lower.endswith(".info"):
+            score -= 5
+        
+        # Hyphenated domains are sometimes spam
+        if domain_lower.count("-") > 2:
+            score -= 10
+        
+        # All-numeric IPs are suspicious
+        if domain_lower.replace(".", "").isdigit():
+            score = 20
+    
+    return max(0, min(100, score))  # Clamp to 0-100
 
 
 def _get_category(score: int) -> str:

@@ -1,0 +1,15 @@
+{
+  "name": "aura-backend",
+  "private": true,
+  "scripts": {
+    "dev:api": "python main.py",
+    "dev:auth": "npm --prefix auth run dev",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:auth\"",
+    "start:api": "python main.py",
+    "start:auth": "npm --prefix auth start",
+    "start": "concurrently \"npm run start:api\" \"npm run start:auth\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

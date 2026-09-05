@@ -5,10 +5,26 @@ import apiClient from '../services/authService';
 
 const AuthPage = ({ onContinue, onBack }) => {
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState('email');
+
+  // Google OAuth controls
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+  const frontendOrigin = currentOrigin || import.meta.env.VITE_FRONTEND_URL || '';
+  const enableGoogleEnv = import.meta.env.VITE_ENABLE_GOOGLE !== 'false';
+  const localOrigins = new Set([
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:3002',
+    'http://127.0.0.1:5173',
+  ]);
+  const allowGoogle = enableGoogleEnv && googleClientId && (!currentOrigin || currentOrigin === frontendOrigin || localOrigins.has(currentOrigin));
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setError('');
@@ -31,7 +47,7 @@ const AuthPage = ({ onContinue, onBack }) => {
     console.error('Google login error');
   };
 
-  const handleSendOTP = async () => {
+  const handleEmailPasswordLogin = async () => {
     if (!email.trim()) {
       setError('Please enter your email address');
       return;
@@ -43,30 +59,13 @@ const AuthPage = ({ onContinue, onBack }) => {
       return;
     }
 
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await apiClient.sendOTP(email);
-      console.log('OTP sent:', response);
-      setStep('otp');
-      setError('');
-    } catch (err) {
-      setError(err.message || 'Failed to send OTP');
-      console.error('Send OTP error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    if (!otp.trim()) {
-      setError('Please enter the OTP');
+    if (!password.trim()) {
+      setError('Please enter your password');
       return;
     }
 
-    if (!/^\d{6}$/.test(otp)) {
-      setError('OTP must be 6 digits');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -74,21 +73,14 @@ const AuthPage = ({ onContinue, onBack }) => {
     setLoading(true);
 
     try {
-      const response = await apiClient.verifyOTP(email, otp);
-      console.log('OTP verified:', response);
+      const response = await apiClient.emailPasswordLogin(email, password);
       onContinue(response.data.user);
     } catch (err) {
-      setError(err.message || 'OTP verification failed');
-      console.error('Verify OTP error:', err);
+      setError(err.message || 'Email/password login failed');
+      console.error('Email/password login error:', err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBackToEmail = () => {
-    setStep('email');
-    setOtp('');
-    setError('');
   };
 
   return (
@@ -109,85 +101,74 @@ const AuthPage = ({ onContinue, onBack }) => {
           </div>
         </div>
 
-        {step === 'email' ? (
-          <>
-            <div className="google-login-wrapper">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                locale="en"
-              />
-            </div>
-
-            <div className="auth-divider">
-              <span>or verify email</span>
-            </div>
-
-            <div className="auth-form">
-              <label htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                className="auth-input"
-                placeholder="Enter you email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError('');
-                }}
-                disabled={loading}
-              />
-              {error && <span className="auth-error">{error}</span>}
-
-              <button
-                className="auth-button-email"
-                onClick={handleSendOTP}
-                disabled={loading}
-              >
-                {loading ? 'Sending OTP...' : 'Continue with Email'}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="auth-form">
-              <label htmlFor="otp">Enter OTP</label>
-              <p className="auth-otp-info">
-                We sent a 6-digit code to <strong>{email}</strong>
+        <div className="google-login-wrapper">
+          {allowGoogle ? (
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={(err) => {
+                console.error('Google login error:', err);
+                setError('Google sign-in failed. Check Google Cloud Console authorized origins.');
+                handleGoogleError();
+              }}
+              locale="en"
+            />
+          ) : (
+            <div style={{ color: '#999', fontSize: '13px', textAlign: 'center' }}>
+              <p style={{ margin: 0 }}>Google sign-in is currently disabled for this origin.</p>
+              <p style={{ margin: '6px 0 0' }}>
+                To enable, either set <strong>VITE_ENABLE_GOOGLE=true</strong> in <code>.env</code> and
+                add <strong>{frontendOrigin}</strong> as an Authorized JavaScript origin in your Google Cloud Console.
               </p>
-              <input
-                id="otp"
-                type="text"
-                className="auth-input"
-                placeholder="000000"
-                value={otp}
-                onChange={(e) => {
-                  setOtp(e.target.value.replace(/\D/g, '').slice(0, 6));
-                  if (error) setError('');
-                }}
-                disabled={loading}
-                maxLength="6"
-              />
-              {error && <span className="auth-error">{error}</span>}
-
-              <button
-                className="auth-button-email"
-                onClick={handleVerifyOTP}
-                disabled={loading}
-              >
-                {loading ? 'Verifying...' : 'Verify OTP'}
-              </button>
-
-              <button
-                className="auth-button-back"
-                onClick={handleBackToEmail}
-                disabled={loading}
-              >
-                Back to Email
-              </button>
+              <p style={{ marginTop: 8 }}>
+                <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">Open Google Cloud Credentials</a>
+              </p>
             </div>
-          </>
-        )}
+          )}
+        </div>
+
+        <div className="auth-divider">
+          <span>or use email and password</span>
+        </div>
+
+        <div className="auth-form">
+          <label htmlFor="email">Email address</label>
+          <input
+            id="email"
+            type="email"
+            className="auth-input"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) setError('');
+            }}
+            disabled={loading}
+          />
+
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            className="auth-input"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError('');
+            }}
+            disabled={loading}
+          />
+
+          {error && <span className="auth-error">{error}</span>}
+
+          <button
+            className="auth-button-email"
+            onClick={handleEmailPasswordLogin}
+            disabled={loading}
+          >
+            {loading ? 'Signing in...' : 'Continue with Email'}
+          </button>
+        </div>
 
         <p className="auth-legal">
           By continuing, you agree to our{' '}

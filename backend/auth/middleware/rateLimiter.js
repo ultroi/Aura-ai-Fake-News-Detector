@@ -2,17 +2,17 @@ const rateLimit = require('express-rate-limit');
 
 /**
  * Global rate limiter
- * 100 requests per 15 minutes
+ * 1000 requests per 15 minutes (relaxed for development)
  */
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    // Skip rate limiting for health check
-    return req.path === '/health';
+    // Skip rate limiting for health check and auth/me
+    return req.path === '/health' || req.path === '/auth/me';
   },
 });
 
@@ -35,37 +35,7 @@ const authLimiter = rateLimit({
   },
 });
 
-/**
- * OTP send limiter
- * 5 requests per 60 minutes (per email)
- */
-const otpSendLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 5,
-  message: 'Too many OTP requests. Please try again later.',
-  skipSuccessfulRequests: false,
-  keyGenerator: (req) => {
-    return req.body.email || req.ip;
-  },
-});
-
-/**
- * OTP verify limiter
- * 15 requests per 15 minutes (per email)
- */
-const otpVerifyLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 15,
-  message: 'Too many OTP verification attempts. Please try again later.',
-  skipSuccessfulRequests: false,
-  keyGenerator: (req) => {
-    return req.body.email || req.ip;
-  },
-});
-
 module.exports = {
   globalLimiter,
   authLimiter,
-  otpSendLimiter,
-  otpVerifyLimiter,
 };

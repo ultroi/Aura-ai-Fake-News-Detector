@@ -1,46 +1,63 @@
-// API client for authentication
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// API client for authentication - use environment variable or fallback
+const API_BASE_URL = import.meta.env.VITE_AUTH_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const ANALYSIS_API_URL = import.meta.env.VITE_ANALYSIS_API_URL || 'http://localhost:8000';
 
+// Add request timeout and error handling wrapper
 const apiClient = {
-  async call(endpoint, options = {}) {
+  async call(endpoint, options = {}, timeout = 30000) {
     const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
-      credentials: 'include', // Include cookies for auth
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    let data;
-    const contentType = response.headers.get('content-type');
+    try {
+      const response = await fetch(url, {
+        ...options,
+        credentials: 'include', // Include cookies for auth
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        signal: controller.signal,
+      });
 
-    if (contentType && contentType.includes('application/json')) {
-      try {
-        data = await response.json();
-      } catch (parseError) {
+      clearTimeout(timeoutId);
+
+      let data;
+      const contentType = response.headers.get('content-type');
+
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          data = {
+            success: false,
+            error: { message: 'Failed to parse JSON response' }
+          };
+        }
+      } else {
+        const text = await response.text();
         data = {
           success: false,
-          error: { message: 'Failed to parse JSON response' }
+          error: { message: text || 'Invalid server response' }
         };
       }
-    } else {
-      const text = await response.text();
-      data = {
-        success: false,
-        error: { message: text || 'Invalid server response' }
-      };
-    }
 
-    if (!response.ok) {
-      const error = new Error(data.error?.message || data.message || 'Request failed');
-      error.status = response.status;
-      error.data = data;
+      if (!response.ok) {
+        const errorMsg = data.error?.message || data.message || data.detail || 'Request failed';
+        const error = new Error(errorMsg);
+        error.status = response.status;
+        error.data = data;
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error(`Request timeout (${timeout}ms)`);
+      }
       throw error;
     }
-
-    return data;
   },
 
   // Google OAuth login
@@ -51,19 +68,11 @@ const apiClient = {
     });
   },
 
-  // Send OTP to email
-  async sendOTP(email) {
-    return this.call('/auth/send-otp', {
+  // Email + password authentication
+  async emailPasswordLogin(email, password) {
+    return this.call('/auth/email-login', {
       method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  },
-
-  // Verify OTP
-  async verifyOTP(email, otp) {
-    return this.call('/auth/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ email, otp }),
+      body: JSON.stringify({ email, password }),
     });
   },
 
@@ -71,6 +80,14 @@ const apiClient = {
   async getCurrentUser() {
     return this.call('/auth/me', {
       method: 'GET',
+    });
+  },
+
+  // Update profile
+  async updateProfile(payload) {
+    return this.call('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
     });
   },
 
@@ -91,3 +108,6 @@ const apiClient = {
 };
 
 export default apiClient;
+
+// Export analysis API URL for use in other components
+export { ANALYSIS_API_URL };

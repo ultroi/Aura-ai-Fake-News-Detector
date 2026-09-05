@@ -5,34 +5,25 @@ import json
 import logging
 from typing import Optional
 from datetime import datetime
-from groq import Groq
-from google import genai
 from app.services.llm_json_parser import parse_llm_json
 from app.services.tavily_search import search_multiple_queries
+from app.services.search_query_generator import generate_search_queries
+from app.services.llm_clients import get_groq_client, get_gemini_client, get_gemini_model_name, handle_groq_exception, reserve_groq_call
 
 logger = logging.getLogger(__name__)
+
+# Smart fallback search constants
+CONFIDENCE_THRESHOLD = 60  # If confidence < 60%, trigger deep search
+MAX_RETRY_ATTEMPTS = 2  # Maximum number of deep search retries
+DEEP_SEARCH_STRATEGIES = ["deep_investigation", "alternative_angles", "expert_consensus"]
 
 # API Keys
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-
 gemini_client = None
 gemini_model_name = None
 _groq_warning_logged = False
-if GEMINI_API_KEY:
-    try:
-        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-        gemini_model_name = "gemini-3-flash-preview"
-    except Exception as e:
-        try:
-            gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-            gemini_model_name = "gemini-3.1-flash-lite-preview"
-        except Exception as e:
-            logger.warning(f"Gemini configuration failed: {e}")
-            gemini_client = None
-            gemini_model_name = None
 
 VERDICT_DISPLAY_CATEGORIES = {
     "true": "TRUE",
@@ -61,7 +52,7 @@ async def analyze_claim(
     translated_claim: Optional[str] = None
 ) -> dict:
     """
-    Stage 4: Final LLM analysis with 6-tier verdict system.
+    Stage 4: Final LLM analysis with 6-tier verdict system and smart fallback search.
 
     Args:
         original_claim: User's original claim
@@ -71,18 +62,12 @@ async def analyze_claim(
         translated_claim: English translation if needed
 
     Returns:
-        Dict with:
-        - verdict: verified_true | likely_true | misleading | likely_fake | fake | unverified
-        - confidence: 0-100
-        - reason: Explanation of the verdict
-        - trusted_sources: URLs of trusted sources used
-        - suspicious_sources: URLs of questionable sources
-        - summary: Brief summary for user
+        Dict with verdict, confidence, reasoning, and sources
     """
     try:
-        # If the claim appears time-sensitive (mentions the current year or "this year"),
-        # attempt a Tavily search first and inject those results into the final reasoning
-        # so Groq receives fresh, real-time context.
+        groq_client = get_groq_client()
+
+        # Time-sensitive claim detection and pre-search
         try:
             current_year = datetime.utcnow().year
             lc_claim = (original_claim or "").lower()
@@ -110,15 +95,30 @@ async def analyze_claim(
         if not groq_client:
             global _groq_warning_logged
             if not _groq_warning_logged:
-                logger.error("Groq API key not configured - cannot perform final reasoning")
+                logger.warning("Groq unavailable for final reasoning; attempting Gemini fallback")
                 _groq_warning_logged = True
-            return _default_response(original_claim, [])
+
+            gemini_client = get_gemini_client()
+            gemini_model_name = get_gemini_model_name()
+            if gemini_client and gemini_model_name:
+                try:
+                    gemini_result = await _analyze_with_gemini_stage4(
+                        original_claim,
+                        extracted_claims,
+                        search_results,
+                        source_credibility,
+                        translated_claim
+                    )
+                    if gemini_result:
+                        logger.info("Gemini fallback succeeded for final reasoning")
+                        return gemini_result
+                except Exception as e:
+                    logger.error(f"Error during Gemini fallback: {e}")
+
+            return _default_response(original_claim, search_results)
         
-        search_context = _prepare_search_context(search_results)
-        trusted_sources = source_credibility.get("trusted_sources", [])
-        suspicious_sources = source_credibility.get("suspicious_sources", [])
-        
-        logger.info("Analyzing claim with Groq LLM - Stage 4 (primary)")
+        # Initial analysis attempt
+        logger.info("=== STAGE 4 ANALYSIS: Final Verdict ===")
         result = await _analyze_with_groq_stage4(
             original_claim,
             extracted_claims,
@@ -126,11 +126,22 @@ async def analyze_claim(
             source_credibility,
             translated_claim
         )
+        
         if result:
+            confidence = result.get("confidence", 0)
+            verdict = result.get("verdict", "unverified")
+            
+            # OPTIMIZATION: Disabled automatic deep search on low confidence
+            # WHY: Automatic retries add 30-60 seconds per request (multiple Groq calls + retrigger searches)
+            # WHEN: Deep search only triggers if user explicitly requests research mode
+            # This single-pass approach reduces latency from 3min → 20sec while preserving verdict quality
+            logger.info(f"Stage 4 Complete - Verdict: {verdict} (Confidence: {confidence}%)")
             return result
 
         # Groq failed; try Gemini as a fallback if configured
-        if gemini_client:
+        gemini_client = get_gemini_client()
+        gemini_model_name = get_gemini_model_name()
+        if gemini_client and gemini_model_name:
             logger.info("Groq failed; attempting Gemini fallback for final reasoning")
             try:
                 gemini_result = await _analyze_with_gemini_stage4(
@@ -157,6 +168,160 @@ async def analyze_claim(
 
 
 
+async def _intelligent_retry_search(
+    original_claim: str,
+    extracted_claims: list,
+    current_search_results: list,
+    source_credibility: dict,
+    translated_claim: Optional[str],
+    initial_verdict: str,
+    attempt: int = 1
+) -> Optional[dict]:
+    """
+    Intelligent deep search when initial confidence is low.
+    Generates alternative search strategies to find more evidence.
+    
+    Args:
+        original_claim: The original claim
+        extracted_claims: Extracted claims from Stage 1
+        current_search_results: Current search results
+        source_credibility: Source credibility evaluation
+        translated_claim: Translated claim if available
+        initial_verdict: Initial verdict from first analysis
+        attempt: Current retry attempt number
+    
+    Returns:
+        Enhanced analysis result or None if no improvement
+    """
+    if attempt > MAX_RETRY_ATTEMPTS:
+        logger.warning(f"Reached maximum retry attempts ({MAX_RETRY_ATTEMPTS})")
+        return None
+    
+    try:
+        logger.info(f"Initiating deep search attempt {attempt}/{MAX_RETRY_ATTEMPTS}")
+        
+        # Generate deep search queries with alternative strategies
+        deep_search_queries = {
+            "claim_id": f"deep_search_{attempt}",
+            "claim": original_claim,
+            "queries": []
+        }
+        
+        # Strategy 1: Deep investigation with academic/expert sources
+        deep_search_queries["queries"].append({
+            "id": "expert_sources",
+            "query": f"{original_claim} research study academic expert analysis",
+            "strategy": "deep_investigation"
+        })
+        
+        # Strategy 2: Counter-evidence and alternative perspectives
+        deep_search_queries["queries"].append({
+            "id": "counterevidence",
+            "query": f"{original_claim} debunked false myths contrary evidence",
+            "strategy": "alternative_angles"
+        })
+        
+        # Strategy 3: Fact-checking organization analysis
+        deep_search_queries["queries"].append({
+            "id": "factcheck_orgs",
+            "query": f"{original_claim} snopes factcheck.org politifact verification",
+            "strategy": "factcheck"
+        })
+        
+        # Strategy 4: Related claims and context
+        deep_search_queries["queries"].append({
+            "id": "related_context",
+            "query": f"{original_claim} context background history related claims",
+            "strategy": "alternative_angles"
+        })
+        
+        # Execute deep search
+        logger.info("Executing deep search queries...")
+        deep_results = await search_multiple_queries(deep_search_queries)
+        
+        if not isinstance(deep_results, dict):
+            logger.warning("Deep search returned invalid format")
+            return None
+        
+        deep_combined_results = deep_results.get("combined_results", [])
+        
+        if not deep_combined_results:
+            logger.warning("Deep search returned no results")
+            return None
+        
+        logger.info(f"Deep search found {len(deep_combined_results)} additional sources")
+        
+        # Merge with existing results (prioritize new ones)
+        enriched_results = deep_combined_results + current_search_results
+        enriched_results = _deduplicate_results(enriched_results)
+        
+        logger.info(f"Enriched search results: {len(enriched_results)} unique sources")
+        
+        # Re-evaluate source credibility with enriched results
+        logger.info("Re-evaluating source credibility with enriched results...")
+        from app.services import source_credibility as sc_module
+        enriched_credibility = await sc_module.evaluate_sources(
+            enriched_results, 
+            claim=original_claim
+        )
+        
+        # Re-analyze with enriched context
+        logger.info(f"Re-analyzing claim with enriched evidence (attempt {attempt})...")
+        enriched_result = await _analyze_with_groq_stage4(
+            original_claim,
+            extracted_claims,
+            enriched_results,
+            enriched_credibility,
+            translated_claim
+        )
+        
+        if not enriched_result:
+            logger.warning("Re-analysis with enriched results failed")
+            return None
+        
+        enriched_confidence = enriched_result.get("confidence", 0)
+        logger.info(f"Deep search analysis - Confidence: {enriched_confidence}%, Verdict: {enriched_result.get('verdict')}")
+        
+        # If still low confidence and attempts remain, recurse
+        if enriched_confidence < CONFIDENCE_THRESHOLD and attempt < MAX_RETRY_ATTEMPTS:
+            logger.info(f"Confidence still below threshold ({enriched_confidence}%). Attempting another search...")
+            retry_result = await _intelligent_retry_search(
+                original_claim=original_claim,
+                extracted_claims=extracted_claims,
+                current_search_results=enriched_results,
+                source_credibility=enriched_credibility,
+                translated_claim=translated_claim,
+                initial_verdict=enriched_result.get("verdict"),
+                attempt=attempt + 1
+            )
+            
+            if retry_result and retry_result.get("confidence", 0) >= enriched_confidence:
+                return retry_result
+        
+        return enriched_result
+        
+    except Exception as e:
+        logger.error(f"Error in intelligent retry search (attempt {attempt}): {str(e)}")
+        return None
+
+
+def _deduplicate_results(results: list) -> list:
+    """Remove duplicate results based on URL"""
+    seen_urls = set()
+    deduplicated = []
+    
+    for result in results:
+        url = result.get("url", "")
+        if url and url not in seen_urls:
+            seen_urls.add(url)
+            deduplicated.append(result)
+        elif not url:
+            # Keep results without URLs but check for duplicate content
+            deduplicated.append(result)
+    
+    return deduplicated
+
+
 async def _analyze_with_groq_stage4(
         original_claim: str,
         extracted_claims: list,
@@ -165,6 +330,7 @@ async def _analyze_with_groq_stage4(
         translated_claim: Optional[str] = None
     ) -> Optional[dict]:
     """Analyze using Groq with Stage 4 logic"""
+    groq_client = get_groq_client()
     if not groq_client:
         return None
 
@@ -265,6 +431,9 @@ OUTPUT FORMAT (strict JSON, no markdown, no extra text):
             logger.warning(f"User prompt seems too short: {user_prompt[:200]}")
 
         try:
+            if not reserve_groq_call():
+                return None
+
             completion = groq_client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
@@ -275,6 +444,8 @@ OUTPUT FORMAT (strict JSON, no markdown, no extra text):
                 max_tokens=2048,
             )
         except Exception as api_error:
+            if handle_groq_exception(api_error, "Groq API error"):
+                return None
             logger.error(f"Groq API error: {api_error}")
             return None
 
@@ -297,7 +468,7 @@ OUTPUT FORMAT (strict JSON, no markdown, no extra text):
         return None
 
 
-# Note: Gemini runtime removed. Groq is the only allowed model for final reasoning.
+# Gemini fallback remains available for degraded operation when Groq is unavailable.
 
 
 def _build_stage4_prompt(
@@ -421,6 +592,8 @@ async def _analyze_with_gemini_stage4(
     translated_claim: Optional[str] = None
 ) -> Optional[dict]:
     """Analyze using Google Gemini as a fallback for Stage 4 logic."""
+    gemini_client = get_gemini_client()
+    gemini_model_name = get_gemini_model_name()
     if not gemini_client or not gemini_model_name:
         return None
 

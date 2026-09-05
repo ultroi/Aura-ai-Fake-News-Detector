@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: null,
     },
+    username: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     googleId: {
       type: String,
       unique: true,
@@ -32,27 +37,11 @@ const userSchema = new mongoose.Schema(
     },
     authProviders: {
       type: [String],
-      enum: ['google', 'otp'],
+      enum: ['google', 'password'],
       default: [],
     },
-    otpHash: {
+    passwordHash: {
       type: String,
-      default: null,
-    },
-    otpExpiry: {
-      type: Date,
-      default: null,
-    },
-    otpAttempts: {
-      type: Number,
-      default: 0,
-    },
-    blockedUntil: {
-      type: Date,
-      default: null,
-    },
-    lastOtpSentAt: {
-      type: Date,
       default: null,
     },
   },
@@ -64,16 +53,6 @@ const userSchema = new mongoose.Schema(
 // Indexes
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
-
-// Clear expired OTP data before save
-userSchema.pre('save', function (next) {
-  if (this.otpExpiry && new Date() > this.otpExpiry) {
-    this.otpHash = null;
-    this.otpExpiry = null;
-    this.otpAttempts = 0;
-  }
-  next();
-});
 
 const User = mongoose.model('User', userSchema);
 

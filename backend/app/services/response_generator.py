@@ -4,30 +4,16 @@ import os
 import json
 import logging
 from typing import Optional
-from groq import Groq
-from google import genai
 from app.services.llm_json_parser import parse_llm_json
+from app.services.llm_clients import get_groq_client, get_gemini_client, get_gemini_model_name, handle_groq_exception, reserve_groq_call
 
 logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-
 gemini_client = None
 gemini_model_name = None
-if GEMINI_API_KEY:
-    try:
-        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-        gemini_model_name = "gemini-3-flash-preview"
-    except Exception:
-        try:
-            gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-            gemini_model_name = "gemini-3.1-flash-lite-preview"
-        except Exception as e:
-            logger.warning(f"Gemini config failed: {e}")
-            gemini_client = None
 
 
 async def generate_response(
@@ -40,25 +26,10 @@ async def generate_response(
     detected_language: str = "en",
     verdict: Optional[str] = None,
     confidence: Optional[int] = None,
+    analysis_reason: Optional[str] = None,
 ) -> str:
-    """
-    Generate a natural, conversational response to the user.
-    
-    Args:
-        user_input: User's original message
-        mode: "verify", "research", or "mixed"
-        extracted_claims: Claims extracted in Stage 1
-        research_topic: Topic to research (if mode is research/mixed)
-        search_results: Search results from Tavily
-        source_credibility: Source evaluation from Stage 3
-        detected_language: Language detected (en/hi/hinglish)
-        verdict: Final verdict if in verify mode
-        confidence: Confidence score if in verify mode
-    
-    Returns:
-        Natural language response for the user
-    """
     try:
+        groq_client = get_groq_client()
         if not groq_client:
             logger.error("Groq not configured")
             return _fallback_response(mode)
@@ -75,13 +46,16 @@ async def generate_response(
             detected_language=detected_language,
             verdict=verdict,
             confidence=confidence,
+            analysis_reason=analysis_reason,
         )
         
         if response_text:
             return response_text
         
         # Groq failed, try Gemini
-        if gemini_client:
+        gemini_client = get_gemini_client()
+        gemini_model_name = get_gemini_model_name()
+        if gemini_client and gemini_model_name:
             logger.info("Groq failed, trying Gemini fallback")
             response_text = await _generate_with_gemini(
                 user_input=user_input,
@@ -93,6 +67,7 @@ async def generate_response(
                 detected_language=detected_language,
                 verdict=verdict,
                 confidence=confidence,
+                analysis_reason=analysis_reason,
             )
             if response_text:
                 return response_text
@@ -115,9 +90,14 @@ async def _generate_with_groq(
     detected_language: str,
     verdict: Optional[str] = None,
     confidence: Optional[int] = None,
+    analysis_reason: Optional[str] = None,
 ) -> Optional[str]:
     """Generate response using Groq"""
     try:
+        groq_client = get_groq_client()
+        if not groq_client:
+            return None
+
         system_prompt = _build_system_prompt(detected_language)
         user_prompt = _build_user_prompt(
             user_input=user_input,
@@ -128,8 +108,12 @@ async def _generate_with_groq(
             source_credibility=source_credibility,
             verdict=verdict,
             confidence=confidence,
+            analysis_reason=analysis_reason,
         )
         
+        if not reserve_groq_call():
+            return None
+
         completion = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
@@ -148,6 +132,8 @@ async def _generate_with_groq(
         return None
         
     except Exception as e:
+        if handle_groq_exception(e, "Groq generation failed"):
+            return None
         logger.error(f"Groq generation failed: {e}")
         return None
 
@@ -162,8 +148,11 @@ async def _generate_with_gemini(
     detected_language: str,
     verdict: Optional[str] = None,
     confidence: Optional[int] = None,
+    analysis_reason: Optional[str] = None,
 ) -> Optional[str]:
     """Generate response using Gemini fallback"""
+    gemini_client = get_gemini_client()
+    gemini_model_name = get_gemini_model_name()
     if not gemini_client or not gemini_model_name:
         return None
     
@@ -178,6 +167,7 @@ async def _generate_with_gemini(
             source_credibility=source_credibility,
             verdict=verdict,
             confidence=confidence,
+            analysis_reason=analysis_reason,
         )
         
         response = gemini_client.models.generate_content(
@@ -201,65 +191,64 @@ def _build_system_prompt(language: str) -> str:
     """Build system prompt for Aura in the specified language"""
     
     if language.startswith("hi"):
-        return """आप Aura हैं — एक तीक्ष्ण, ईमानदार, और बातचीत करने वाली तरह की फैक्ट-चेकिंग सहायक।
+        return """आप Aura हैं — एक तीक्ष्ण, ईमानदार फैक्ट-चेकिंग सहायक।
 
-आप एक जानकार दोस्त की तरह बोलते हैं जो मीडिया साक्षरता और जांच-पड़ताल में विशेषज्ञ है।
+VERIFY MODE RESPONSE FORMAT (अनिवार्य):
 
-आपके दो मोड हैं:
+1. VERDICT LINE (स्पष्ट, 1 line):
+   ❌ False | ⚠️ Misleading | ✔️ Likely True | ❓ Unverified
 
-VERIFY MODE (जब यूजर किसी claim को सत्यापित करना चाहता है):
-- सीधा और स्पष्ट verdict दें
-- 2-3 प्राकृतिक पैराग्राफ में explain करें
-- Sources को नाम से cite करें
-- एक साफ समापन दें
+2. WHY (2-3 short lines):
+   क्या खोजा, कहाँ से आया
 
-RESEARCH MODE (जब यूजर किसी विषय के बारे में जानना चाहता है):
-- पृष्ठभूमि और context explain करें
-- 3-4 प्राकृतिक पैराग्राफ में मुख्य बातें समझाएं
-- आगे के सवालों के लिए open रहें
+3. EVIDENCE (2-3 verified sources का नाम):
+   • Reuters ने कहा...
+   • BBC reported...
 
-PERSONALITY RULES:
-- "मैं" (I) का प्राकृतिक रूप से use करें
-- रोबोट की तरह नहीं, एक स्मार्ट दोस्त की तरह बोलें
-- Uncertainty के बारे में सीधे कहें
-- अपनी सोच दिखाएं
-- जवाब मध्यम रखें: 2 छोटे पैराग्राफ या 1 छोटा पैराग्राफ + 3 bullets max
-- कभी long-form essay न बनाएं
-- सिर्फ जरूरी sources को अंत में bullets में दें
-- कभी "जैसा कि एक AI" न कहें
-- छोटे जवाब ठीक हैं, pad न करें"""
+4. CLOSING (1 line):
+   यह क्या मतलब है user के लिए
+
+RULES:
+- कभी raw URL मत दो
+- Source नाम ही काफी है
+- मध्यम जवाब: 60-120 words max
+- Natural Hindi/Hinglish बोलो
+- कभी JSON या metadata न दो
+
+RESEARCH MODE:
+- Topic explain करो (2-3 short paragraphs)
+- Key points list करो
+- आगे के सवाल के लिए open रहो"""
     else:
         # Default English
-        return """You are Aura — a sharp, honest, and conversational fact-checker and research assistant.
+        return """You are Aura — a sharp, honest fact-checker. Your job is clarity, not essays.
 
-You talk like a knowledgeable friend who happens to be an expert in media literacy and investigative research.
+VERIFY MODE RESPONSE FORMAT (mandatory):
 
-YOU HAVE TWO MODES:
+1. VERDICT LINE (clear, 1 line):
+   ❌ False | ⚠️ Misleading | ✔️ Likely True | ❓ Unverified
 
-VERIFY MODE (when user shares a claim and wants true/false verdict):
-- Start with a natural opening reaction to the claim
-- Give clear verdict in 1-2 sentences — don't bury it
-- Explain in 1-2 short paragraphs what the evidence shows
-- Cite sources by name ("According to Reuters...", "AltNews found...")
-- End with a closing line about what they should know
+2. WHY (2-3 short lines):
+   What you found and where it came from
 
-RESEARCH MODE (when user asks about a topic):
-- Acknowledge what they're asking about
-- Explain in 2-3 short paragraphs
-- Include only the most important context and nuances
-- Invite further questions
+3. EVIDENCE (2-3 trusted source names only):
+   • Reuters reported...
+   • BBC found...
 
-PERSONALITY RULES:
-- Talk like a human expert, not a report
-- Use "I" naturally: "I found...", "I checked..."
-- Be direct about uncertainty
-- Keep responses medium-length: 2 short paragraphs max, or 1 short paragraph + up to 3 bullets
-- Avoid long multi-paragraph essays
-- Only add sources at the end if you actually checked real sources
-- NEVER say "As an AI language model"
-- Show your thinking naturally
-- Keep responses focused — don't pad
-- Match the user's tone and energy"""
+4. CLOSING (1 line):
+   What this means for the user
+
+RULES:
+- Never include raw URLs
+- Source name only — no domains, titles, or metadata
+- Keep it short: 60-120 words max
+- Sound natural and confident
+- No JSON, no metadata, no formatting
+
+RESEARCH MODE:
+- Explain the topic (2-3 short paragraphs)
+- List key points
+- Invite follow-up questions"""
 
 
 def _build_user_prompt(
@@ -271,33 +260,29 @@ def _build_user_prompt(
     source_credibility: dict,
     verdict: Optional[str] = None,
     confidence: Optional[int] = None,
+    analysis_reason: Optional[str] = None,
 ) -> str:
-    """Build the user prompt with context"""
+    """Build the user prompt with context. Cleaner metadata for better LLM output."""
     
     claims_text = "\n".join([f"- {claim}" for claim in extracted_claims]) if extracted_claims else f"- {user_input}"
     
-    # Build sources section
-    usable_sources = [s for s in search_results if s.get("should_use", True)][:10]
+    # Build sources section - only top 3, clean format
+    usable_sources = [s for s in search_results if s.get("should_use", True)][:3]
     sources_list = []
     for src in usable_sources:
-        domain = src.get("domain") or src.get("source_domain", "unknown")
-        stance = src.get("stance_on_claim", "neutral")
-        tier = src.get("credibility_tier", "unknown")
+        # Only extract source name, no heavy metadata
+        domain = src.get("domain", "unknown")
         title = src.get("title", "Source")
-        sources_list.append(f"- {title} ({domain}) — Stance: {stance}, Tier: {tier}")
+        # Prefer shorter domain name or title
+        source_name = domain.split('.')[0].title() if '.' in domain else title[:30]
+        sources_list.append(f"• {source_name}")
     
-    sources_section = "\n".join(sources_list) if sources_list else "No sources found"
-    
-    # Build evidence section
-    evidence_quality = source_credibility.get("overall_evidence_quality", "insufficient")
-    evidence_consensus = source_credibility.get("evidence_consensus", "no consensus")
-    usable_count = source_credibility.get("usable_sources_count", len(usable_sources))
+    sources_section = "\n".join(sources_list) if sources_list else "No trusted sources found"
     
     base_prompt = f"""ORIGINAL USER INPUT:
 {user_input}
 
 MODE: {mode}
-DETECTED LANGUAGE: Based on context, respond in the same language/script as the user's input.
 
 EXTRACTED CLAIMS:
 {claims_text}"""
@@ -314,20 +299,23 @@ RESEARCH TOPIC:
 VERDICT INFORMATION:
 - Final Verdict: {verdict or 'Analysis incomplete'}
 - Confidence: {confidence or '0'}%
-- Evidence Quality: {evidence_quality}
-- Evidence Consensus: {evidence_consensus}
-- Usable Sources: {usable_count}
 
-CURATED SOURCES (High credibility only):
+TRUSTED SOURCES (checked):
 {sources_section}"""
+        
+        if analysis_reason:
+            base_prompt += f"""
+
+ANALYSIS CONTEXT (from fact-checking process):
+{analysis_reason[:500]}"""
     
     base_prompt += f"""
 
-Now generate a natural, conversational response that directly answers the user's input.
-Do NOT include any JSON, metadata, or system information.
-Respond in a medium length: ideally 80-140 words.
-If you found clear data, say it directly and stop.
-If the evidence is weak or missing, say that briefly and suggest the next best source.
+Generate a natural, conversational response using the format specified in the system prompt.
+Keep it direct and clear: 60-120 words is ideal.
+If verdict is clear, state it and move on.
+If evidence is weak, say that briefly.
+Never add raw URLs or metadata.
 """
     
     return base_prompt

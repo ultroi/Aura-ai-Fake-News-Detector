@@ -37,11 +37,11 @@ router.post(
 );
 
 /**
- * POST /auth/send-otp
- * Send OTP to email address
+ * POST /auth/email-login
+ * Authenticate with email and password
  */
 router.post(
-  '/send-otp',
+  '/email-login',
   body('email')
     .notEmpty()
     .withMessage('Email is required')
@@ -49,30 +49,15 @@ router.post(
     .withMessage('Please provide a valid email address')
     .normalizeEmail()
     .toLowerCase(),
-  handleValidationErrors,
-  authController.sendOTP
-);
-
-/**
- * POST /auth/verify-otp
- * Verify OTP and issue JWT
- */
-router.post(
-  '/verify-otp',
-  body('email')
+  body('password')
     .notEmpty()
-    .withMessage('Email is required')
-    .isEmail()
-    .withMessage('Please provide a valid email address')
-    .normalizeEmail()
-    .toLowerCase(),
-  body('otp')
-    .notEmpty()
-    .withMessage('OTP is required')
-    .matches(/^\d{6}$/)
-    .withMessage('OTP must be 6 digits'),
+    .withMessage('Password is required')
+    .isString()
+    .withMessage('Password must be a string')
+    .isLength({ min: 8, max: 128 })
+    .withMessage('Password must be between 8 and 128 characters'),
   handleValidationErrors,
-  authController.verifyOTP
+  authController.emailPasswordLogin
 );
 
 /**
@@ -80,6 +65,20 @@ router.post(
  * Get current authenticated user
  */
 router.get('/me', authMiddleware, authController.getMe);
+
+/**
+ * PATCH /auth/profile
+ * Update current user profile
+ */
+router.patch(
+  '/profile',
+  authMiddleware,
+  body('name').optional().isString().trim().isLength({ min: 2, max: 80 }).withMessage('Name must be between 2 and 80 characters'),
+  body('username').optional().isString().trim().isLength({ min: 2, max: 30 }).withMessage('Username must be between 2 and 30 characters'),
+  body('picture').optional().isString().withMessage('Picture must be a string'),
+  handleValidationErrors,
+  authController.updateProfile
+);
 
 /**
  * POST /auth/logout

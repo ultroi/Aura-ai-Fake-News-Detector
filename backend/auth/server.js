@@ -12,8 +12,6 @@ const errorHandler = require('./middleware/errorHandler');
 const {
   globalLimiter,
   authLimiter,
-  otpSendLimiter,
-  otpVerifyLimiter,
 } = require('./middleware/rateLimiter');
 
 // Initialize Express app
@@ -53,7 +51,7 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
 
-    const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:3000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:5173'];
+    const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:3000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3002', 'http://127.0.0.1:5173'];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -95,8 +93,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       'POST /auth/google': 'Google OAuth login',
-      'POST /auth/send-otp': 'Send OTP to email',
-      'POST /auth/verify-otp': 'Verify OTP and login',
+      'POST /auth/email-login': 'Authenticate with email and password',
       'GET /auth/me': 'Get current user (protected)',
       'POST /auth/logout': 'Logout user',
       'POST /auth/support': 'Submit help/support request',
@@ -105,8 +102,6 @@ app.get('/', (req, res) => {
 });
 
 // Auth routes with rate limiters
-app.use('/auth/send-otp', otpSendLimiter);
-app.use('/auth/verify-otp', otpVerifyLimiter);
 app.use('/auth', authLimiter);
 app.use('/auth', authRoutes);
 
@@ -147,8 +142,7 @@ const startServer = async () => {
 
 Available endpoints:
   POST   /auth/google        - Google OAuth login
-  POST   /auth/send-otp      - Send OTP to email
-  POST   /auth/verify-otp    - Verify OTP and login
+  POST   /auth/email-login   - Authenticate with email and password
   GET    /auth/me            - Get current user
   POST   /auth/logout        - Logout user
   POST   /auth/support       - Submit support request

@@ -2,10 +2,15 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Load environment variables from the backend directory explicitly
-load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env", override=True)
+# Do not override existing environment variables so a stale local .env entry
+# cannot replace a valid runtime secret.
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env", override=False)
 
 from app.routes import analysis_routes
 
@@ -43,6 +48,18 @@ app.include_router(analysis_routes.router)
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Aura AI"}
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    print(f"Validation error for {request.url.path}: {exc}")
+    return JSONResponse(
+        status_code=422,
+        content=jsonable_encoder({
+            "detail": exc.errors(),
+            "body": exc.body,
+        })
+    )
 
 
 @app.get("/")

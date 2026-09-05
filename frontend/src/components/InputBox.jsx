@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X } from 'lucide-react';
 import '../styles/InputBox.css';
+import { detectInputType, isValidURL } from '../utils/urlDetector';
 
-function InputBox({ onSendMessage }) {
+function InputBox({ onSendMessage, onStop, isLoading }) {
   const [input, setInput] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [attachedImages, setAttachedImages] = useState([]);
@@ -21,12 +22,42 @@ function InputBox({ onSendMessage }) {
   }, [input]);
 
   const handleSend = async () => {
-    const query = input.trim();
-    if (!query && attachedImages.length === 0) return;
-    
-    onSendMessage(query, attachedImages);
-    setInput('');
-    setAttachedImages([]);
+    const trimmedInput = input.trim();
+    if (!trimmedInput && attachedImages.length === 0) return;
+
+    try {
+      const inputType = detectInputType(trimmedInput);
+
+      if (inputType.type === 'text') {
+        onSendMessage(trimmedInput, attachedImages, '');
+        setInput('');
+        setAttachedImages([]);
+      } else if (inputType.type === 'url_only') {
+        processURLs(inputType.urls, '');
+      } else if (inputType.type === 'url_with_prompt') {
+        processURLs(inputType.urls, inputType.query);
+      }
+    } catch (error) {
+      console.error('Error processing input:', error);
+    }
+  };
+
+  const processURLs = async (urls, userQuery) => {
+    try {
+      const validUrls = urls.filter(url => isValidURL(url));
+      if (validUrls.length === 0) {
+        alert('No valid URLs found. Please enter valid URLs starting with http:// or https://');
+        return;
+      }
+
+      const firstUrl = validUrls[0];
+      onSendMessage(userQuery || `Analyze this URL: ${firstUrl}`, attachedImages, firstUrl);
+      setInput('');
+      setAttachedImages([]);
+    } catch (error) {
+      console.error('Error processing URLs:', error);
+      alert('Failed to process URLs');
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -34,6 +65,18 @@ function InputBox({ onSendMessage }) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const insertTextAtCursor = (textToInsert) => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newValue = textarea.value.slice(0, start) + textToInsert + textarea.value.slice(end);
+    setInput(newValue);
+    requestAnimationFrame(() => {
+      textarea.setSelectionRange(start + textToInsert.length, start + textToInsert.length);
+    });
   };
 
   const handleFileSelect = (e) => {
@@ -60,6 +103,36 @@ function InputBox({ onSendMessage }) {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handlePaste = (e) => {
+    if (!e.clipboardData) return;
+    const items = Array.from(e.clipboardData.items || []);
+    const imageItems = items.filter(item => item.kind === 'file' && item.type.startsWith('image/'));
+    if (imageItems.length === 0) return;
+
+    e.preventDefault();
+
+    const text = e.clipboardData.getData('text');
+    if (text) {
+      insertTextAtCursor(text);
+    }
+
+    imageItems.forEach(item => {
+      const file = item.getAsFile();
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setAttachedImages(prev => [...prev, {
+          id: Date.now() + Math.random(),
+          file: file,
+          preview: event.target.result,
+          name: file.name || 'pasted-image.png'
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const removeImage = (id) => {
@@ -112,20 +185,26 @@ function InputBox({ onSendMessage }) {
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onPaste={handlePaste}
                 onKeyDown={handleKeyDown}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder="Ask Aura AI anything..."
+                placeholder="Ask anything... text, URLs, or URL + question"
                 className="input-textarea"
                 rows="1"
             />
+            
             <button 
-              className="send-button" 
-              onClick={handleSend}
+              className={`send-button ${isLoading ? 'processing' : ''}`} 
+              onClick={isLoading ? onStop : handleSend}
               type="button"
-              disabled={!input.trim() && attachedImages.length === 0}
+              disabled={!input.trim() && attachedImages.length === 0 && !isLoading}
             >
-                <Send size={20} />
+                {isLoading ? (
+                  <X size={20} />
+                ) : (
+                  <Send size={20} />
+                )}
             </button>
         </div>
         <p className="input-hint">Shift + Enter for new line • Enter to send</p>

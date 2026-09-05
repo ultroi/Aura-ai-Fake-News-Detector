@@ -77,21 +77,52 @@
 }
 
 .user-bubble {
-  background: #2a2a2f;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-light);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
   border-bottom-right-radius: 6px;
   max-width: clamp(180px, 55%, 520px);
   align-self: flex-end;
 }
 
 .ai-bubble {
-  background: #121214;
+  background: var(--surface);
   color: var(--text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
   border-bottom-left-radius: 6px;
   max-width: clamp(260px, 70%, 700px);
   align-self: flex-start;
+}
+
+.assistant-summary {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.14);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.assistant-reasoning {
+  margin-top: 12px;
+  padding: 12px 12px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reasoning-label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.reasoning-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
 }
 
 .message.error .message-bubble {
@@ -294,11 +325,35 @@
   margin-top: 0;
 }
 
+.typing-indicator-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
 .typing-indicator {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 14px 0;
+}
+
+.stop-button {
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.stop-button:hover {
+  background: rgba(239, 68, 68, 0.16);
+  transform: translateY(-1px);
 }
 
 .typing-indicator span {
@@ -395,4 +450,25 @@
 .user-bubble .chat-image {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Source URL styling */
+.source-url-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.source-url-link {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: #6496ff;
+  text-decoration: none;
+  word-break: break-all;
+  transition: color 0.2s ease;
+}
+
+.source-url-link:hover {
+  color: #7ea8ff;
+  text-decoration: underline;
 }

@@ -10,7 +10,7 @@
   overflow-x: hidden;
   overflow-y: auto; /* allow scroll */
 
-  background: #1F2125;
+  background: var(--background);
 }
 
 .dashboard-topbar {
@@ -34,7 +34,7 @@
   padding: 12px 20px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
@@ -55,9 +55,9 @@
 }
 
 .dashboard-button-secondary {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  background: linear-gradient(135deg, var(--primary), var(--purple-highlight));
   border: none;
-  color: #fff;
+  color: var(--text-primary);
   box-shadow: 0 18px 40px rgba(124, 58, 237, 0.2);
 }
 
@@ -88,7 +88,7 @@
   border-radius: 999px;
   background: rgba(124, 58, 237, 0.14);
   border: 1px solid rgba(124, 58, 237, 0.2);
-  color: #d8dbff;
+  color: var(--purple-highlight);
   font-size: 0.74rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -108,14 +108,14 @@
 
 .dashboard-hero h1 span {
   color: transparent;
-  background: linear-gradient(90deg, #a78bfa, #c084fc);
+  background: linear-gradient(90deg, var(--purple-highlight), var(--accent));
   -webkit-background-clip: text;
   background-clip: text;
 }
 
 .dashboard-hero p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--text-secondary);
   font-size: 1rem;
   line-height: 1.6;
   max-width: 520px;
@@ -139,8 +139,8 @@
 }
 
 .dashboard-hero-cta {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--purple-highlight));
+  color: var(--text-primary);
   border: none;
   box-shadow: none;
 }
@@ -153,7 +153,7 @@
 .dashboard-hero-secondary {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
+  color: var(--text-primary);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 

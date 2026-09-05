@@ -21,11 +21,11 @@
 .input-box-container {
     width: calc(100% - 32px);
     max-width: 700px;
-    background: #2a2a2f;
+    background: var(--surface-light);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
     min-height: 52px;
-    padding: 12px 16px;
+    padding: 12px 16px 12px 14px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -34,12 +34,13 @@
     overflow: hidden;
     flex-wrap: nowrap;
     margin: 0 16px;
+    padding-right: 100px;
 }
 
 /* Expanded state increases size by 40% when there is text in the input */
 .input-box-container:focus-within {
     border-color: rgba(255, 255, 255, 0.2);
-    background: #323237;
+    background: var(--surface);
 }
 
 .input-box-container.expanded {
@@ -52,7 +53,7 @@
     flex-grow: 1;
     background: transparent;
     border: none;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 15px;
     line-height: 1.5;
     resize: none;
@@ -69,7 +70,7 @@
 }
 
 .input-textarea::placeholder {
-    color: #9ca3af;
+    color: var(--text-secondary);
 }
 
 .input-actions {
@@ -79,7 +80,7 @@
 .icon-button {
     background: transparent;
     border: none;
-    color: #9ca3af;
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 8px;
     display: flex;
@@ -91,44 +92,92 @@
 }
 
 .icon-button:hover {
-    color: #d1d5db;
+    color: var(--text-primary);
     background: rgba(255, 255, 255, 0.08);
 }
 
 .send-button {
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     padding: 0;
-    background: transparent;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
     border: none;
-    border-radius: 8px;
-    color: #d1d5db;
-    font-weight: 600;
+    border-radius: 50%;
+    color: #ffffff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
     flex-shrink: 0;
+    box-shadow: 0 12px 24px rgba(124, 58, 237, 0.2);
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+}
+
+.send-button.processing {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 1), rgba(244, 63, 94, 1));
 }
 
 .send-button:hover:not(:disabled) {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 14px 28px rgba(124, 58, 237, 0.28);
 }
 
 .send-button:active:not(:disabled) {
-    transform: scale(0.95);
+    box-shadow: 0 10px 22px rgba(124, 58, 237, 0.25);
 }
 
 .send-button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.icon-button:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
 
+.input-textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loading-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
 .input-hint {
     font-size: 12px;
-    color: #6B6B7F;
+    color: var(--text-muted);
     margin-top: 12px;
     text-align: center;
 }

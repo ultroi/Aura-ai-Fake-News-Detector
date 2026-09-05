@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu } from 'lucide-react';
 import ChatContainer from './ChatContainer';
 import InputBox from './InputBox';
@@ -9,10 +9,12 @@ import AuthPage from './AuthPage';
 import DashboardPage from './DashboardPage';
 import SettingsPage from './SettingsPage';
 import SupportPage from './SupportPage';
+import ProfileModal from './ProfileModal';
 import '../styles/App.css';
 import '../styles/HeroSection.css';
-import apiClient from '../services/authService';
+import apiClient, { ANALYSIS_API_URL } from '../services/authService';
 import { serializeConversation, deserializeConversation, cacheImages } from '../utils/storageManager';
+import { detectInputType, isValidURL } from '../utils/urlDetector';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -20,6 +22,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [view, setView] = useState('dashboard');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const [conversations, setConversations] = useState(() => {
     const saved = localStorage.getItem('aura_conversations');
@@ -77,6 +80,9 @@ function App() {
     const saved = localStorage.getItem('aura_theme');
     return saved || 'dark';
   });
+  const abortControllersRef = useRef({});
+  const currentAbortMessageIdRef = useRef(null);
+  const isRequestActive = messages.some((msg) => msg.role === 'assistant' && msg.isLoading);
 
   useEffect(() => {
     // Limit to last 50 conversations to manage storage
@@ -107,24 +113,37 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
+    let isMounted = true;
     const checkAuth = async () => {
       try {
         const response = await apiClient.getCurrentUser();
-        setUser(response.data.user);
-        setAuthenticated(true);
-        setView('dashboard');
+        if (isMounted) {
+          setUser(response.data.user);
+          setAuthenticated(true);
+          setView('dashboard');
+        }
       } catch (err) {
-        setAuthenticated(false);
-        setUser(null);
+        if (isMounted) {
+          setAuthenticated(false);
+          setUser(null);
+        }
       } finally {
-        setAuthLoading(false);
+        if (isMounted) {
+          setAuthLoading(false);
+        }
       }
     };
 
     checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleTryAura = () => {
+    setShowProfileModal(false);
+    setShowSettingsModal(false);
     if (!authenticated) {
       setView('auth');
     } else {
@@ -133,10 +152,14 @@ function App() {
   };
 
   const handleOpenAuth = () => {
+    setShowProfileModal(false);
+    setShowSettingsModal(false);
     setView('auth');
   };
 
   const handleBackToDashboard = () => {
+    setShowProfileModal(false);
+    setShowSettingsModal(false);
     setView('dashboard');
   };
 
@@ -146,24 +169,43 @@ function App() {
     setView('dashboard');
   };
 
+  const handleUpdateProfile = async (updatedUser) => {
+    setUser(updatedUser);
+    setShowProfileModal(false);
+
+    try {
+      const response = await apiClient.updateProfile({
+        name: updatedUser.name,
+        username: updatedUser.username,
+        picture: updatedUser.picture,
+      });
+
+      if (response?.data?.user) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.error('Profile update failed:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await apiClient.logout();
-      setUser(null);
-      setAuthenticated(false);
-      setView('dashboard');
-      setActiveConversationId(null);
     } catch (err) {
       console.error('Logout error:', err);
+    } finally {
       setUser(null);
       setAuthenticated(false);
       setView('dashboard');
       setActiveConversationId(null);
+      setShowProfileModal(false);
+      setShowSettingsModal(false);
+      setIsSidebarOpen(false);
     }
   };
 
   const handleProfile = () => {
-    setView('dashboard');
+    setShowProfileModal(true);
   };
 
   const handleSettings = () => {
@@ -175,6 +217,8 @@ function App() {
   };
 
   const handleStartNewChat = () => {
+    setShowProfileModal(false);
+    setShowSettingsModal(false);
     setActiveConversationId(null);
     setView('chat');
     closeSidebar();
@@ -204,23 +248,41 @@ function App() {
     });
   };
 
-  const handleSendMessage = async (query, attachedImages = []) => {
+  const handleSendMessage = async (query, attachedImages = [], url = '') => {
     if (!authenticated) {
       setView('auth');
       return;
     }
 
-    const trimmedQuery = query.trim();
-    if (!trimmedQuery && attachedImages.length === 0) return;
-
     const timestamp = new Date().toISOString();
     const messageId = Date.now();
-    
+
+    // Intelligent input detection and routing
+    let inputType = { type: 'text', urls: [], query };
+    let finalQuery = query;
+    let finalUrl = url;
+
+    // If no URL was detected at input level, analyze the query for URLs
+    if (!url && query) {
+      inputType = detectInputType(query);
+      finalQuery = inputType.query;
+      finalUrl = inputType.urls.length > 0 ? inputType.urls[0] : '';
+    }
+
+    // Validate input
+    if (!finalQuery && !finalUrl && attachedImages.length === 0) return;
+
+    // Build display content
+    const displayContent = finalUrl 
+      ? `${finalQuery} ${finalUrl}`.trim() 
+      : finalQuery;
+
     const userMessage = {
       id: messageId,
       role: 'user',
-      content: trimmedQuery,
+      content: displayContent,
       timestamp,
+      url: finalUrl || null,
       images: attachedImages.map(img => ({
         name: img.name,
         preview: img.preview,
@@ -245,7 +307,7 @@ function App() {
     if (!activeConversation) {
       const newConversation = {
         id: conversationId,
-        title: trimmedQuery || 'Image Analysis',
+        title: displayContent.slice(0, 120) || 'New Chat',
         messages: [userMessage, loadingMessage],
         createdAt: timestamp,
         lastUpdated: timestamp,
@@ -268,23 +330,40 @@ function App() {
     }
 
     try {
-      // Prepare request body with images
       const requestBody = {
-        query: trimmedQuery,
         user_id: user?.id || user?._id || 'anonymous',
+        mode: 'verify',
       };
 
-      // If images are attached, add them as base64
+      // Send query as main analysis content
+      if (finalQuery) {
+        requestBody.query = finalQuery;
+      }
+
+      // Send URL as reference if detected/provided
+      if (finalUrl) {
+        // Validate URL before sending
+        if (!isValidURL(finalUrl)) {
+          throw new Error(`Invalid URL format: ${finalUrl}`);
+        }
+        requestBody.url = finalUrl;
+      }
+
       if (attachedImages.length > 0) {
         requestBody.images = attachedImages.map(img => img.preview);
       }
 
-      const response = await fetch('http://localhost:8000/analyze', {
+      const controller = new AbortController();
+      abortControllersRef.current[loadingMessage.id] = controller;
+      currentAbortMessageIdRef.current = loadingMessage.id;
+
+      const response = await fetch(`${ANALYSIS_API_URL}/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        signal: controller.signal,
         body: JSON.stringify(requestBody),
       });
 
@@ -322,8 +401,13 @@ function App() {
                 ? {
                     ...msg,
                     content: assistantText,
+                    shortSummary: data.short_summary || '',
+                    reason: data.reason || '',
+                    keyFacts: data.key_facts || [],
+                    importantContext: data.important_context || null,
                     verdict: data.verdict || data.verdict_display || '',
                     sources: combinedSources,
+                    sourceUrl: data.source_url || null,
                     isLoading: false,
                   }
                 : msg
@@ -344,15 +428,34 @@ function App() {
               msg.id === loadingMessage.id
                 ? {
                     ...msg,
-                    content: `Error: ${error.message}. Please try again.`,
+                    content:
+                      error.name === 'AbortError'
+                        ? 'Analysis stopped by user.'
+                        : `Error: ${error.message}. Please try again.`,
                     isLoading: false,
-                    isError: true,
+                    isError: error.name !== 'AbortError',
                   }
                 : msg
             ),
           };
         })
       );
+    } finally {
+      if (abortControllersRef.current[loadingMessage.id]) {
+        delete abortControllersRef.current[loadingMessage.id];
+      }
+      if (currentAbortMessageIdRef.current === loadingMessage.id) {
+        currentAbortMessageIdRef.current = null;
+      }
+    }
+  };
+
+  const handleStop = () => {
+    const activeId = currentAbortMessageIdRef.current;
+    if (!activeId) return;
+    const controller = abortControllersRef.current[activeId];
+    if (controller) {
+      controller.abort();
     }
   };
 
@@ -365,16 +468,29 @@ function App() {
       .reverse()
       .find((msg) => msg.role === 'user');
 
-    if (!previousUserMessage?.content) return;
+    if (!previousUserMessage?.content && !previousUserMessage?.url) return;
 
-    handleSendMessage(previousUserMessage.content);
+    handleSendMessage(previousUserMessage.content || '', previousUserMessage.images || [], previousUserMessage.url || '');
   };
 
   if (authLoading) {
     return (
       <div className="app auth-app-screen">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-          <div>Loading...</div>
+          <div style={{ width: '100%', maxWidth: '600px', padding: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ height: '60px', backgroundColor: '#e0e0e0', borderRadius: '8px', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div style={{ height: '20px', backgroundColor: '#e0e0e0', borderRadius: '4px', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div style={{ height: '20px', backgroundColor: '#e0e0e0', borderRadius: '4px', width: '80%', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div style={{ height: '100px', backgroundColor: '#e0e0e0', borderRadius: '8px', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            </div>
+            <style>{`
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+              }
+            `}</style>
+          </div>
         </div>
       </div>
     );
@@ -390,18 +506,31 @@ function App() {
 
   if (view === 'dashboard') {
     return (
-      <div className="app auth-app-screen">
-        <DashboardPage
-          onTryAura={handleTryAura}
-          onOpenAuth={handleOpenAuth}
+      <>
+        <div className="app auth-app-screen">
+          <DashboardPage
+            onTryAura={handleTryAura}
+            onOpenAuth={handleOpenAuth}
+            user={user}
+            authenticated={authenticated}
+            onProfile={handleProfile}
+            onSettings={handleSettings}
+            onHelp={handleHelp}
+            onLogout={handleLogout}
+          />
+        </div>
+
+        {showSettingsModal && (
+          <SettingsPage user={user} onClose={() => setShowSettingsModal(false)} />
+        )}
+
+        <ProfileModal
+          visible={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          onSave={handleUpdateProfile}
           user={user}
-          authenticated={authenticated}
-          onProfile={handleProfile}
-          onSettings={handleSettings}
-          onHelp={handleHelp}
-          onLogout={handleLogout}
         />
-      </div>
+      </>
     );
   }
 
@@ -470,8 +599,8 @@ function App() {
             <HeroSection onSendMessage={handleSendMessage} />
           ) : (
             <>
-              <ChatContainer messages={messages} onSendMessage={handleSendMessage} onRetry={handleRetry} />
-              <InputBox onSendMessage={handleSendMessage} />
+              <ChatContainer messages={messages} onSendMessage={handleSendMessage} onRetry={handleRetry} onStop={handleStop} />
+              <InputBox onSendMessage={handleSendMessage} onStop={handleStop} isLoading={isRequestActive} />
             </>
           )}
         </main>
@@ -481,6 +610,13 @@ function App() {
       {showSettingsModal && (
         <SettingsPage user={user} onClose={() => setShowSettingsModal(false)} />
       )}
+
+      <ProfileModal
+        visible={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        onSave={handleUpdateProfile}
+        user={user}
+      />
     </>
   );
 }

@@ -6,9 +6,8 @@ import logging
 import re
 from typing import Optional
 from langdetect import detect, DetectorFactory
-from groq import Groq
-from google import genai
 from app.services.llm_json_parser import parse_llm_json
+from app.services.llm_clients import get_groq_client, get_gemini_client, get_gemini_model_name, handle_groq_exception, reserve_groq_call
 
 # Set seed for consistent language detection
 DetectorFactory.seed = 0
@@ -18,22 +17,8 @@ logger = logging.getLogger(__name__)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-
 gemini_client = None
 gemini_model_name = None
-if GEMINI_API_KEY:
-    try:
-        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-        gemini_model_name = "gemini-3-flash-preview"
-    except Exception:
-        try:
-            gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-            gemini_model_name = "gemini-3.1-flash-lite-preview"
-        except Exception as e:
-            logger.warning(f"Failed to configure Gemini: {e}")
-            gemini_client = None
-            gemini_model_name = None
 
 
 async def extract_claim(user_input: str) -> dict:
@@ -56,6 +41,8 @@ async def extract_claim(user_input: str) -> dict:
         - translated_claim: English version for searching
     """
     try:
+        groq_client = get_groq_client()
+
         if not user_input or len(user_input.strip()) == 0:
             return {
                 "error": "Empty input",
@@ -72,7 +59,9 @@ async def extract_claim(user_input: str) -> dict:
             if extraction_result:
                 return extraction_result
 
-        if gemini_client:
+        gemini_client = get_gemini_client()
+        gemini_model_name = get_gemini_model_name()
+        if gemini_client and gemini_model_name:
             extraction_result = await _extract_with_gemini(user_input, detected_lang)
             if extraction_result:
                 return extraction_result
@@ -116,6 +105,7 @@ def _detect_language(text: str) -> str:
 
 async def _extract_with_groq(text: str, lang: str) -> Optional[dict]:
     """Use Groq to extract claims intelligently"""
+    groq_client = get_groq_client()
     if not groq_client:
         return None
     
@@ -160,6 +150,9 @@ User input:
 
 Return the JSON object now."""
         
+        if not reserve_groq_call():
+            return None
+
         completion = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             max_tokens=1024,
@@ -176,12 +169,16 @@ Return the JSON object now."""
         return _normalize_claim_extraction_result(result, text, lang)
         
     except Exception as e:
+        if handle_groq_exception(e, "Groq extraction failed"):
+            return None
         logger.error(f"Groq extraction failed: {str(e)}")
         return None
 
 
 async def _extract_with_gemini(text: str, lang: str) -> Optional[dict]:
     """Use Google Gemini to extract claims intelligently"""
+    gemini_client = get_gemini_client()
+    gemini_model_name = get_gemini_model_name()
     if not gemini_client:
         return None
     

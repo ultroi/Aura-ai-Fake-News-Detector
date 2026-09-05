@@ -14,17 +14,19 @@ button {
 
 /* Dark theme (default) */
 :root {
-  --primary: #A855F7;
-  --primary-soft: rgba(168, 85, 247, 0.12);
-  --accent: #8B5CF6;
-  --accent-soft: rgba(139, 92, 246, 0.12);
-  --background: #1F2125;
-  --surface: #181B20;
-  --surface-light: #1F2125;
-  --text-primary: #FFFFFF;
-  --text-secondary: #B4B4C7;
-  --text-muted: #7A7A8C;
-  --border: rgba(168, 85, 247, 0.1);
+  --primary: #7C3AED;
+  --primary-soft: rgba(124, 58, 237, 0.14);
+  --accent: #22D3EE;
+  --accent-soft: rgba(34, 211, 238, 0.16);
+  --background: #0B0D12;
+  --surface: #121620;
+  --surface-light: #181C27;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #94A3B8;
+  --text-muted: #7E8AA0;
+  --border: #252B38;
+  --purple-highlight: #A78BFA;
   --success: #22C55E;
   --error: #EF4444;
   --warning: #F59E0B;
@@ -44,19 +46,21 @@ button {
   --bg-user: var(--primary-soft);
   --accent-primary: var(--primary);
   --accent-secondary: var(--accent);
-  --accent-primary-light: rgba(168, 85, 247, 0.3);
-  --accent-primary-dim: rgba(168, 85, 247, 0.12);
-  --accent-tertiary: #D8B4FE;
-  --border: rgba(168, 85, 247, 0.1);
+  --accent-primary-light: rgba(124, 58, 237, 0.3);
+  --accent-primary-dim: rgba(124, 58, 237, 0.12);
+  --accent-tertiary: var(--purple-highlight);
+  --border-light: rgba(37, 43, 56, 0.85);
 }
 
 /* Light theme */
 [data-theme="light"] {
   --primary: #6D28D9;
   --accent: #8B5CF6;
+  --purple-highlight: #A78BFA;
   --background: #F8FAFC;
   --background-alt: #FFFFFF;
   --surface: #FFFFFF;
+  --surface-light: #F3F4F6;
   --surface-soft: #F3F4F6;
   --surface-alt: #F9FAFB;
   --glass: rgba(255, 255, 255, 0.72);
@@ -97,7 +101,7 @@ body {
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #1F2125;
+  background-color: var(--background);
   color: var(--text-primary);
   line-height: 1.6;
   font-weight: 400;
@@ -109,8 +113,8 @@ body {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background: #1F2125;
-  color: #fff;
+  background: var(--background);
+  color: var(--text-primary);
   overflow-x: hidden;
 }
 
@@ -180,7 +184,7 @@ body {
   border-radius: 14px;
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--text-primary);
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -195,7 +199,7 @@ body {
   background: transparent;
   border-radius: 0;
   padding: 0;
-  color: #fff;
+  color: var(--text-primary);
   border: none;
 }
 
@@ -218,7 +222,7 @@ body {
   font-weight: 700;
   letter-spacing: -0.02em;
   font-size: 1.4rem;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .app.sidebar-open .sidebar-toggle-button {
@@ -305,7 +309,7 @@ body {
 
 .new-chat-btn:hover {
   transform: translateY(-1px);
-  background: #7C3AED;
+  background: var(--purple-highlight);
 }
 
 .sidebar-history {

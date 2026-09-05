@@ -3,12 +3,13 @@ import * as LucideIcons from 'lucide-react';
 import '../styles/SettingsDropdown.css';
 
 const SettingsDropdown = ({ user = {}, onProfile, onSettings, onHelp, onLogout }) => {
-  const HelpIcon = LucideIcons.HelpCircle || LucideIcons.CircleHelp;
+  const HelpIcon = LucideIcons.HelpCircle;
   const UserIcon = LucideIcons.User;
   const SettingsIcon = LucideIcons.Settings;
   const LogoutIcon = LucideIcons.LogOut;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -16,10 +17,17 @@ const SettingsDropdown = ({ user = {}, onProfile, onSettings, onHelp, onLogout }
   const userEmail = user.email || 'user@example.com';
   const initials = userName
     .split(' ')
+    .filter(Boolean)
     .map((part) => part[0])
     .slice(0, 2)
     .join('')
     .toUpperCase();
+
+  const hasAvatar = Boolean(user.picture && !imageError);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [user.picture]);
 
   const closeDropdown = () => {
     setIsOpen(false);
@@ -112,13 +120,18 @@ const SettingsDropdown = ({ user = {}, onProfile, onSettings, onHelp, onLogout }
       <button
         ref={triggerRef}
         type="button"
-        className="settings-avatar-button"
+        className={`settings-avatar-button ${hasAvatar ? 'has-image' : 'fallback'}`}
         aria-haspopup="true"
         aria-expanded={isOpen}
         onClick={handleToggle}
       >
-        {user.picture ? (
-          <img src={user.picture} alt={userName} className="settings-avatar-image" />
+        {hasAvatar ? (
+          <img
+            src={user.picture}
+            alt={userName}
+            className="settings-avatar-image"
+            onError={() => setImageError(true)}
+          />
         ) : (
           <span className="settings-avatar-text">{initials}</span>
         )}
@@ -132,11 +145,16 @@ const SettingsDropdown = ({ user = {}, onProfile, onSettings, onHelp, onLogout }
           onKeyDown={handleMenuKeyDown}
         >
           <div className="settings-dropdown-user">
-            <div className="settings-dropdown-avatar">
-              {user.picture ? (
-                <img src={user.picture} alt={userName} className="settings-dropdown-avatar-image" />
+            <div className={`settings-dropdown-avatar ${hasAvatar ? 'has-image' : 'fallback'}`}>
+              {hasAvatar ? (
+                <img
+                  src={user.picture}
+                  alt={userName}
+                  className="settings-dropdown-avatar-image"
+                  onError={() => setImageError(true)}
+                />
               ) : (
-                initials
+                <span className="settings-avatar-text">{initials}</span>
               )}
             </div>
             <div className="settings-dropdown-user-info">

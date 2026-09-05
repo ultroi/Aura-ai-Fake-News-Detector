@@ -21,8 +21,8 @@
 }
 
 .settings-modal {
-  background: #1a1a1f;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   width: 90%;
   max-width: 500px;
@@ -56,13 +56,13 @@
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .settings-modal-close {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -73,7 +73,7 @@
 }
 
 .settings-modal-close:hover {
-  color: #fff;
+  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -93,7 +93,7 @@
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -102,8 +102,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #2a2a2f;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-light);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
   cursor: pointer;
@@ -113,7 +113,7 @@
 }
 
 .settings-option:hover {
-  background: #323237;
+  background: var(--surface);
   border-color: rgba(255, 255, 255, 0.15);
 }
 
@@ -122,7 +122,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #d1d5db;
+  color: var(--text-primary);
   width: 36px;
   height: 36px;
 }
@@ -136,19 +136,19 @@
   margin: 0 0 2px 0;
   font-size: 14px;
   font-weight: 500;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .settings-option-content p {
   margin: 0;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--text-secondary);
   line-height: 1.3;
 }
 
 .settings-option-arrow {
   flex-shrink: 0;
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 18px;
 }
 
@@ -166,8 +166,8 @@
 }
 
 .nested-modal-content {
-  background: #1a1a1f;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   width: 85%;
   max-width: 400px;
@@ -189,13 +189,13 @@
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .modal-close {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: var(--text-secondary);
   cursor: pointer;
   font-size: 20px;
   width: 28px;
@@ -208,13 +208,13 @@
 }
 
 .modal-close:hover {
-  color: #fff;
+  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.1);
 }
 
 .modal-body {
   padding: 16px 20px;
-  color: #d1d5db;
+  color: var(--text-secondary);
   line-height: 1.5;
   font-size: 14px;
 }
