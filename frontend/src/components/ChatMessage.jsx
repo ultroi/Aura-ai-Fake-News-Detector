@@ -129,7 +129,7 @@ function ChatMessage({ message, onRetry, onStop }) {
   }, [message.id]);
 
   return (
-    <motion.div
+    <motion.article
       className={`message ${isUser ? 'user-message' : 'ai-message'} ${isError ? 'error' : ''}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -264,7 +264,7 @@ function ChatMessage({ message, onRetry, onStop }) {
           </div>
         </>
       )}
-    </motion.div>
+    </motion.article>
   );
 }
 

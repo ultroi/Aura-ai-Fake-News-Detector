@@ -107,7 +107,7 @@ const Sidebar = ({ conversations, activeConversationId, onStartNewChat, onOpenCo
         </button>
       </div>
 
-      <div className="recent-chats">
+      <nav className="recent-chats" aria-label="Recent chats">
         <div className="recent-chats-header">
           <h2>Recent chats</h2>
         </div>
@@ -267,7 +267,7 @@ const Sidebar = ({ conversations, activeConversationId, onStartNewChat, onOpenCo
             ))}
           </div>
         )}
-      </div>
+      </nav>
     </aside>
   );
 };

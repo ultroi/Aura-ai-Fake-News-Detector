@@ -146,7 +146,7 @@ const SupportPage = ({ user, onBack }) => {
   const SelectedIcon = selectedType.icon;
 
   return (
-    <div className="support-screen">
+    <main className="support-screen">
       {showSuccessPopup ? (
         <div className="support-popup-overlay" role="dialog" aria-modal="true" aria-label="Support request sent successfully">
           <div className="support-popup-card">
@@ -163,18 +163,18 @@ const SupportPage = ({ user, onBack }) => {
       ) : null}
 
       <div className="support-shell">
-        <div className="support-topbar">
+        <header className="support-topbar">
           <button type="button" className="support-back-button" onClick={onBack}>
             <ArrowLeft size={16} />
             <span>Back</span>
           </button>
-        </div>
+        </header>
 
-        <div className="support-hero">
+        <section className="support-hero" aria-labelledby="support-title">
           <span className="support-badge">Help & Support</span>
-          <h1>Need help with something?</h1>
+          <h1 id="support-title">Need help with something?</h1>
           <p>Send a bug report, error report, or suggestion. Keep it short, clear, and we’ll take it from there.</p>
-        </div>
+        </section>
 
         <div className="support-layout">
           <aside className="support-info-panel">
@@ -303,7 +303,7 @@ const SupportPage = ({ user, onBack }) => {
           </section>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

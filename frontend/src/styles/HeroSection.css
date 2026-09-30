@@ -1,36 +1,36 @@
 .initial-container {
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  min-height: calc(100vh - var(--header-height));
+  display: grid;
+  place-items: center;
+  padding: var(--space-8) var(--space-4);
 }
 
 .welcome-screen {
+  width: min(100%, 48rem);
+  display: grid;
+  justify-items: center;
   text-align: center;
-  max-width: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
-.welcome-screen h2 {
-  font-size: 2.5rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--text-primary);
+.welcome-screen h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  letter-spacing: -0.035em;
 }
 
 .welcome-subtitle {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin-bottom: 32px;
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
 }
 
 .main-input-area {
   width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-  transition: all 0.3s ease;
+  margin-top: var(--space-8);
+}
+
+@media (max-width: 36rem) {
+  .initial-container {
+    padding-inline: var(--space-3);
+    padding-bottom: var(--space-8);
+  }
 }

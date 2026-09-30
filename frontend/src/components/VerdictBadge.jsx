@@ -6,13 +6,13 @@ function VerdictBadge({ verdict }) {
   const getVerdictConfig = (v) => {
     switch (v.toLowerCase()) {
       case 'true':
-        return { label: '✓ TRUE', className: 'verdict-true', color: 'var(--success)' };
+        return { label: '✓ TRUE', className: 'verdict-true', color: 'var(--color-success)' };
       case 'false':
-        return { label: '✗ FALSE', className: 'verdict-false', color: 'var(--error)' };
+        return { label: '✗ FALSE', className: 'verdict-false', color: 'var(--color-error)' };
       case 'uncertain':
-        return { label: '? UNCERTAIN', className: 'verdict-uncertain', color: 'var(--warning)' };
+        return { label: '? UNCERTAIN', className: 'verdict-uncertain', color: 'var(--color-warning)' };
       default:
-        return { label: 'UNKNOWN', className: 'verdict-unknown', color: 'var(--text-secondary)' };
+        return { label: 'UNKNOWN', className: 'verdict-unknown', color: 'var(--color-text-muted)' };
     }
   };
 

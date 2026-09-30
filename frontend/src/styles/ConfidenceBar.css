@@ -1,50 +1,30 @@
-/* Confidence Bar */
 .confidence-container {
-  margin: 16px 0;
+  display: grid;
+  gap: var(--space-2);
 }
 
 .confidence-label {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  gap: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
 }
 
 .confidence-value {
-  color: var(--accent-primary);
-  font-weight: 700;
+  color: var(--color-text);
 }
 
 .confidence-bar {
   width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  height: 0.5rem;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: var(--color-border);
 }
 
 .confidence-fill {
   height: 100%;
-  border-radius: 4px;
-  background: var(--accent);
-  box-shadow: none;
-  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: inherit;
 }
-
-/* Responsive */
-@media (max-width: 600px) {
-  .confidence-label {
-    font-size: 12px;
-  }
-
-  .confidence-bar {
-    height: 6px;
-  }
-}
-

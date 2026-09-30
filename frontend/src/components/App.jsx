@@ -10,7 +10,6 @@ import DashboardPage from './DashboardPage';
 import SettingsPage from './SettingsPage';
 import SupportPage from './SupportPage';
 import ProfileModal from './ProfileModal';
-import '../styles/App.css';
 import '../styles/HeroSection.css';
 import apiClient, { ANALYSIS_API_URL } from '../services/authService';
 import { serializeConversation, deserializeConversation, cacheImages } from '../utils/storageManager';
@@ -476,22 +475,12 @@ function App() {
   if (authLoading) {
     return (
       <div className="app auth-app-screen">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-          <div style={{ width: '100%', maxWidth: '600px', padding: '20px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ height: '60px', backgroundColor: '#e0e0e0', borderRadius: '8px', animation: 'pulse 1.5s ease-in-out infinite' }} />
-              <div style={{ height: '20px', backgroundColor: '#e0e0e0', borderRadius: '4px', animation: 'pulse 1.5s ease-in-out infinite' }} />
-              <div style={{ height: '20px', backgroundColor: '#e0e0e0', borderRadius: '4px', width: '80%', animation: 'pulse 1.5s ease-in-out infinite' }} />
-              <div style={{ height: '100px', backgroundColor: '#e0e0e0', borderRadius: '8px', animation: 'pulse 1.5s ease-in-out infinite' }} />
-            </div>
-            <style>{`
-              @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-              }
-            `}</style>
-          </div>
-        </div>
+        <main className="app-loading" aria-live="polite">
+          <div className="loading-skeleton loading-skeleton--brand" />
+          <div className="loading-skeleton loading-skeleton--line" />
+          <div className="loading-skeleton loading-skeleton--line loading-skeleton--short" />
+          <div className="loading-skeleton loading-skeleton--panel" />
+        </main>
       </div>
     );
   }
@@ -563,13 +552,15 @@ function App() {
           isOpen={isSidebarOpen}
           closeSidebar={closeSidebar}
         />
-        <div
+        <button
           className="sidebar-backdrop"
           onClick={closeSidebar}
+          aria-label="Close navigation"
           aria-hidden={!isSidebarOpen}
+          type="button"
         />
         <main className="main-content">
-          <div className="top-bar">
+          <header className="top-bar">
             <button
               className="sidebar-toggle-button"
               onClick={toggleSidebar}
@@ -579,13 +570,13 @@ function App() {
             >
               <Menu size={20} />
             </button>
-            <div className="app-branding">
-              <div className="app-logo">
-                <img src="/aura_ai.png" alt="Aura AI logo" />
-              </div>
-              <div className="app-brand-text">Aura AI</div>
-            </div>
-            <div className="top-bar-actions">
+            <a className="app-branding" href="#" onClick={(event) => event.preventDefault()} aria-label="Aura AI home">
+              <span className="app-logo">
+                <img src="/aura_ai.png" alt="" />
+              </span>
+              <span className="app-brand-text">Aura AI</span>
+            </a>
+            <nav className="top-bar-actions" aria-label="Account actions">
               <SettingsDropdown
                 user={user}
                 onProfile={handleProfile}
@@ -593,8 +584,8 @@ function App() {
                 onHelp={handleHelp}
                 onLogout={handleLogout}
               />
-            </div>
-          </div>
+            </nav>
+          </header>
           {messages.length === 0 ? (
             <HeroSection onSendMessage={handleSendMessage} />
           ) : (

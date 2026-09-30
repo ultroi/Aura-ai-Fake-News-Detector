@@ -4,10 +4,10 @@ import '../styles/ConfidenceBar.css';
 
 function ConfidenceBar({ confidence }) {
   const getConfidenceColor = (conf) => {
-    if (conf >= 80) return 'var(--success)';
-    if (conf >= 60) return 'var(--accent-secondary)';
-    if (conf >= 40) return 'var(--warning)';
-    return 'var(--error)';
+    if (conf >= 80) return 'var(--color-success)';
+    if (conf >= 60) return 'var(--color-accent)';
+    if (conf >= 40) return 'var(--color-warning)';
+    return 'var(--color-error)';
   };
 
   return (

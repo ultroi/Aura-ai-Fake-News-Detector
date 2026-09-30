@@ -84,8 +84,8 @@ const AuthPage = ({ onContinue, onBack }) => {
   };
 
   return (
-    <div className="auth-screen">
-      <div className="auth-content">
+    <main className="auth-screen">
+      <section className="auth-content" aria-labelledby="auth-title">
         {onBack && (
           <button className="auth-back-top" type="button" onClick={onBack}>
             Back
@@ -96,7 +96,7 @@ const AuthPage = ({ onContinue, onBack }) => {
             <img src="/aura_ai.png" alt="Aura AI" width="80" height="80" />
           </div>
           <div className="auth-copy">
-            <h1>Welcome</h1>
+            <h1 id="auth-title">Welcome</h1>
             <p>Sign in to continue to your AI workspace</p>
           </div>
         </div>
@@ -113,13 +113,13 @@ const AuthPage = ({ onContinue, onBack }) => {
               locale="en"
             />
           ) : (
-            <div style={{ color: '#999', fontSize: '13px', textAlign: 'center' }}>
-              <p style={{ margin: 0 }}>Google sign-in is currently disabled for this origin.</p>
-              <p style={{ margin: '6px 0 0' }}>
+            <div className="auth-google-disabled">
+              <p>Google sign-in is currently disabled for this origin.</p>
+              <p>
                 To enable, either set <strong>VITE_ENABLE_GOOGLE=true</strong> in <code>.env</code> and
                 add <strong>{frontendOrigin}</strong> as an Authorized JavaScript origin in your Google Cloud Console.
               </p>
-              <p style={{ marginTop: 8 }}>
+              <p>
                 <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">Open Google Cloud Credentials</a>
               </p>
             </div>
@@ -130,7 +130,7 @@ const AuthPage = ({ onContinue, onBack }) => {
           <span>or use email and password</span>
         </div>
 
-        <div className="auth-form">
+        <form className="auth-form" onSubmit={(event) => { event.preventDefault(); handleEmailPasswordLogin(); }}>
           <label htmlFor="email">Email address</label>
           <input
             id="email"
@@ -163,20 +163,21 @@ const AuthPage = ({ onContinue, onBack }) => {
 
           <button
             className="auth-button-email"
-            onClick={handleEmailPasswordLogin}
+            type="submit"
+            onClick={(event) => { event.preventDefault(); handleEmailPasswordLogin(); }}
             disabled={loading}
           >
             {loading ? 'Signing in...' : 'Continue with Email'}
           </button>
-        </div>
+        </form>
 
         <p className="auth-legal">
           By continuing, you agree to our{' '}
           <a href="#">Terms of Service</a> and{' '}
           <a href="#">Privacy Policy</a>.
         </p>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 

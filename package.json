@@ -1,15 +1,15 @@
 {
   "name": "aura-ai",
   "version": "1.0.0",
-  "description": "Aura AI - Fake News Detection Platform",
+  "description": "Aura AI - MERN full-stack fake news detection and research platform",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:auth\"",
-    "dev:backend": "cd backend && python main.py",
-    "dev:auth": "cd backend/auth && npm run dev",
-    "start": "concurrently \"npm run start:backend\" \"npm run start:auth\"",
-    "start:backend": "cd backend && python main.py",
-    "start:auth": "cd backend/auth && npm start",
-    "install:all": "npm install && cd backend/auth && npm install"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run preview",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

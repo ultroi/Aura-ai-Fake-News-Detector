@@ -11,9 +11,9 @@ const SettingsPage = ({ onClose, user }) => {
 
   return (
     <div className="settings-modal-backdrop" onClick={onClose}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
+      <section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
         <div className="settings-modal-header">
-          <h1>Settings</h1>
+          <h1 id="settings-title">Settings</h1>
           <button
             className="settings-modal-close"
             onClick={onClose}
@@ -103,7 +103,7 @@ const SettingsPage = ({ onClose, user }) => {
             </div>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };

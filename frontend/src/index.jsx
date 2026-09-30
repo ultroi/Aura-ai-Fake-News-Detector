@@ -1,25 +1,27 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import App from './components/App';
-import './styles/App.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+import App from "./components/App";
+import "./styles/App.css";
 
-const Root = (
-  <React.StrictMode>
+const rootElement = document.getElementById("root");
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
+
+if (!rootElement) {
+  throw new Error("Root element was not found.");
+}
+
+const app = googleClientId ? (
+  <GoogleOAuthProvider clientId={googleClientId}>
     <App />
-  </React.StrictMode>
+  </GoogleOAuthProvider>
+) : (
+  <App />
 );
 
-if (googleClientId) {
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-      <GoogleOAuthProvider clientId={googleClientId}>
-        <App />
-      </GoogleOAuthProvider>
-    </React.StrictMode>,
-  );
-} else {
-  ReactDOM.createRoot(document.getElementById('root')).render(Root);
-}
+ReactDOM.createRoot(rootElement).render(
+  <React.StrictMode>
+    {app}
+  </React.StrictMode>
+);
