@@ -130,6 +130,18 @@ html {
   min-width: 320px;
   min-height: 100%;
   font-size: 16px;
+
+  /*
+   * Keep pages scrollable while removing the browser's
+   * always-visible scrollbar chrome.
+   */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 body {
@@ -152,6 +164,20 @@ body {
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /*
+   * Prevent accidental horizontal page overflow.
+   * Vertical scrolling remains fully functional.
+   */
+  overflow-x: hidden;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 button,
@@ -194,6 +220,29 @@ select:focus-visible {
 
 #root {
   min-height: 100vh;
+  overflow-x: hidden;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#root::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/*
+ * Hide scrollbar chrome for nested app scroll containers too,
+ * without disabling their ability to scroll.
+ */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .app {
