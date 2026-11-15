@@ -5,7 +5,11 @@
 </p>
 
 <p align="center">
-  Aura AI combines LLM reasoning, web search, source analysis, URL extraction, OCR, and a conversational React interface to help users investigate claims and research information.
+  Investigate claims with AI-assisted analysis, web search, source credibility checks, URL extraction, and OCR.
+</p>
+
+<p align="center">
+  <a href="https://aura-ai-fake-news-detector.vercel.app/"><strong>🚀 View the live app</strong></a>
 </p>
 
 <p align="center">
@@ -18,46 +22,57 @@
 
 ---
 
-## 📌 Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Author](#author)
+## Overview
 
----
+Aura AI is a full-stack AI research and claim-verification application. It combines language-model reasoning with web evidence so users can explore a claim through a conversational research interface.
 
-## 🚀 Overview
-**Aura AI** is a full-stack AI research and claim-verification application. Instead of sending a user's message directly to an LLM and displaying the generated answer, Aura AI breaks the problem into multiple stages:
+## Features
 
-1. Understand the user's input.
-2. Extract the important claim(s).
-3. Generate targeted search queries.
-4. Retrieve external evidence.
-5. Evaluate the quality and credibility of sources.
-6. Compare the evidence with the claim.
-7. Ask an LLM to produce structured reasoning.
-8. Present the result through a conversational research interface.
+- **Claim verification:** Structured results with verdicts, confidence, key facts, and sources.
+- **Research modes:** Verify, research, and mixed workflows.
+- **URL analysis:** Extracts and analyzes content from submitted web pages.
+- **Image analysis:** OCR extracts text from screenshots and images for analysis.
+- **Source credibility:** Assesses retrieved sources to help users evaluate evidence.
+- **Authentication:** Google OAuth and email/password sign-in, with JWT-based sessions.
+- **Research workspace:** Source lists, profiles, and analysis history for signed-in users.
 
-## ✨ Features
-* **AI-powered claim verification:** Returns structured verification results containing verdicts, confidence scores, key facts, and trusted/suspicious sources.
-* **Research, verify, and mixed modes:** Supports dedicated workflows for binary claim verification or broader research.
-* **URL analysis:** Users can submit a URL to have the backend fetch, extract, and analyze the accessible page content.
-* **Image and screenshot analysis:** Uses OCR to extract text from social-media screenshots and images before running the analysis workflow.
-* **Source credibility analysis:** Evaluates search results to separate useful sources from those requiring additional caution before final reasoning.
-* **Conversational research workspace:** Features persistent conversations, source lists, profile settings, and local browser state management.
-* **Secure Authentication:** Express backend supports Google OAuth, email/password login, JWTs, and bcrypt password hashing.
+## Architecture
 
-## 🏗️ Architecture
-The application uses a **MERN-oriented full-stack architecture**:
-* **Frontend:** React 18, Vite, Framer Motion, and custom CSS for a responsive, accessible chat interface.
-* **Backend:** Node.js and Express REST API handling HTTP routing, validation, and authentication.
-* **Database:** MongoDB for storing user profiles, analysis history, and support requests.
-* **AI & External Services:** Groq/Gemini for LLM inference, Tavily for web search, and Tesseract.js for OCR.
+- **Frontend:** React 18, Vite, Framer Motion, and responsive CSS.
+- **Backend:** Node.js, Express, and REST API.
+- **Database:** MongoDB with Mongoose.
+- **AI and research:** Groq or Gemini for language-model inference, Tavily for web search, and Tesseract.js for OCR.
+- **Deployment:** Vercel frontend and serverless API.
 
-## 🧰 Tech Stack
-* **Frontend:** React 18, Vite, JavaScript / JSX, Framer Motion, CSS Grid / Flexbox.
-* **Backend:** Node.js, Express, MongoDB, Mongoose, JWT, bcrypt, Helmet, Express Rate Limit.
-* **AI / Research:** Groq, Google Gemini, Tavily Web Search, Tesseract.js.
+## Tech Stack
 
+React · Vite · Node.js · Express · MongoDB · Mongoose · Groq/Gemini · Tavily · Tesseract.js
 
+## Run Locally
+
+Install dependencies for the root project, backend, and frontend:
+
+```bash
+npm run install:all
+```
+
+Create `backend/.env` with the required backend configuration, then start both apps:
+
+```bash
+npm run dev
+```
+
+The frontend runs locally on Vite and uses `http://localhost:5000` for the API by default. Set `VITE_API_URL` in the frontend environment to use a different API URL.
+
+## Production Configuration
+
+Configure these environment variables in the deployment environment:
+
+- `MONGODB_URI`
+- `JWT_SECRET`
+- `GROQ_API_KEY` or `GEMINI_API_KEY`
+- `TAVILY_API_KEY`
+- `CORS_ORIGINS` for any custom frontend origins
+- `GOOGLE_CLIENT_ID` if Google sign-in is enabled
+
+The production frontend uses the same-origin `/api` endpoint by default. Set `VITE_API_URL` if the API is hosted separately.
