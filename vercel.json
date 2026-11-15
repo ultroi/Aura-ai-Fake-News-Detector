@@ -1,13 +1,27 @@
 {
-  "installCommand": "npm install --prefix backend && npm install --prefix frontend",
-  "buildCommand": "npm --prefix frontend run build",
-  "outputDirectory": "frontend/dist",
-  "functions": {
-    "api/[...path].js": {
-      "maxDuration": 60
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "backend": {
+      "root": "backend",
+      "framework": "express"
+    },
+    "frontend": {
+      "root": "frontend",
+      "framework": "vite"
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "frontend"
+      }
+    }
   ]
 }
