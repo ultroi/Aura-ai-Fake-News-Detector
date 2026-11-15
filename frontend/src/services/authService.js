@@ -1,6 +1,8 @@
 // API client for authentication - use environment variable or fallback
-const API_BASE_URL = import.meta.env.VITE_AUTH_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const ANALYSIS_API_URL = import.meta.env.VITE_ANALYSIS_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const defaultApiUrl = import.meta.env.PROD ? '/api' : 'http://localhost:5000';
+const normalizeBaseUrl = (url) => String(url || '').replace(/\/$/, '');
+const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_AUTH_API_URL || import.meta.env.VITE_API_URL || defaultApiUrl);
+const ANALYSIS_API_URL = normalizeBaseUrl(import.meta.env.VITE_ANALYSIS_API_URL || import.meta.env.VITE_API_URL || defaultApiUrl);
 
 // Add request timeout and error handling wrapper
 const apiClient = {

@@ -3,9 +3,10 @@ import { GoogleLogin } from "@react-oauth/google";
 import "../styles/AuthPage.css";
 import apiClient from "../services/authService";
 
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:5000";
+// The backend success helper returns user data at the top level. Support the
+// older nested shape as well so this screen remains compatible with older APIs.
+const getUserFromResponse = (response) =>
+  response?.user ?? response?.data?.user ?? null;
 
 const AuthPage = ({ onContinue, onBack }) => {
   const [mode, setMode] = useState("login");
@@ -115,7 +116,12 @@ const AuthPage = ({ onContinue, onBack }) => {
           credentialResponse.credential
         );
 
-      onContinue(response.data.user);
+      const user = getUserFromResponse(response);
+      if (!user) {
+        throw new Error("Google sign-in succeeded, but the server did not return user data.");
+      }
+
+      onContinue(user);
     } catch (err) {
       setError(
         err.message ||
@@ -155,7 +161,12 @@ const AuthPage = ({ onContinue, onBack }) => {
           password
         );
 
-      onContinue(response.data.user);
+      const user = getUserFromResponse(response);
+      if (!user) {
+        throw new Error("Login succeeded, but the server did not return user data.");
+      }
+
+      onContinue(user);
     } catch (err) {
       setError(
         err.message ||
@@ -195,39 +206,14 @@ const AuthPage = ({ onContinue, onBack }) => {
     clearError();
 
     try {
-      const response = await fetch(
-        `${API_URL}/auth/register`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            name: normalizedName,
-            username: normalizedName,
-            email:
-              email.trim(),
-            password,
-          }),
-        }
-      );
+      const payload = await apiClient.register({
+        name: normalizedName,
+        username: normalizedName,
+        email: email.trim(),
+        password,
+      });
 
-      const payload =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          payload?.error?.message ||
-            payload?.message ||
-            "Account creation failed."
-        );
-      }
-
-      const user =
-        payload?.data?.user ||
-        payload?.user;
+      const user = getUserFromResponse(payload);
 
       if (!user) {
         throw new Error(
@@ -382,21 +368,15 @@ const AuthPage = ({ onContinue, onBack }) => {
             {allowGoogle ? (
               <div className="auth-google__button">
                 <GoogleLogin
-                  onSuccess={
-                    handleGoogleSuccess
-                  }
-                  onError={
-                    handleGoogleError
+                  onSuccess={handleGoogleSuccess}
+                  onError={() =>
+                    setError("Google sign-in failed. Please try again.")
                   }
                   locale="en"
                   theme="outline"
                   size="large"
                   shape="rectangular"
-                  text={
-                    mode === "login"
-                      ? "continue_with"
-                      : "signup_with"
-                  }
+                  text="continue_with" /* Forces "Continue with Google" universally */
                 />
               </div>
             ) : (

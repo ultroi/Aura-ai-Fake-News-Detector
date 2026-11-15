@@ -23,9 +23,9 @@ function ProfileModal({ visible, onClose, onSave, user = null }) {
   const handleSave = () => {
     onSave({
       ...user,
-      name: name.trim() || user.name || 'User Name',
-      username: username.trim() || user.username || '',
-      picture: photo || user.picture || '',
+      name: name.trim() || safeUser.name || 'User Name',
+      username: username.trim() || safeUser.username || '',
+      picture: photo || safeUser.picture || '',
     });
     setStatus('Profile saved successfully');
     window.setTimeout(() => setStatus(''), 2500);
@@ -101,7 +101,7 @@ function ProfileModal({ visible, onClose, onSave, user = null }) {
               {photo ? (
                 <img src={photo} alt="Profile preview" />
               ) : (
-                (user.name || 'U')
+                (safeUser.name || 'U')
                   .split(' ')
                   .map((part) => part[0])
                   .slice(0, 2)
@@ -110,7 +110,7 @@ function ProfileModal({ visible, onClose, onSave, user = null }) {
               )}
             </div>
             <div>
-              <div className="profile-avatar-label">{user.name || 'User Name'}</div>
+              <div className="profile-avatar-label">{safeUser.name || 'User Name'}</div>
               <div className="profile-photo-actions">
                 <input
                   id="profile-photo-input"

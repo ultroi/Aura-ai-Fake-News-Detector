@@ -1,6 +1,9 @@
 const app = require('./app');
 const { env, validateRuntimeConfig } = require('./config/env');
 const { connectDatabase, disconnectDatabase } = require('./config/database');
+const dns = require('node:dns');
+
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const start = async () => {
   validateRuntimeConfig();

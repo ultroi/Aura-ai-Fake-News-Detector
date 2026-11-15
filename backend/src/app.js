@@ -11,6 +11,13 @@ const { failure } = require('./utils/response');
 
 const app = express();
 
+// Vercel serves the API beneath /api; keep Express routes environment agnostic.
+app.use((req, _res, next) => {
+  if (req.url === '/api') req.url = '/';
+  else if (req.url.startsWith('/api/')) req.url = req.url.slice(4);
+  next();
+});
+
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 

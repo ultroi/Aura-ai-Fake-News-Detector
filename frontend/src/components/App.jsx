@@ -116,8 +116,13 @@ function App() {
     const checkAuth = async () => {
       try {
         const response = await apiClient.getCurrentUser();
+        const currentUser = response?.user ?? response?.data?.user;
+        if (!currentUser) {
+          throw new Error('Authentication endpoint returned no user data');
+        }
+
         if (isMounted) {
-          setUser(response.data.user);
+          setUser(currentUser);
           setAuthenticated(true);
           setView('dashboard');
         }
@@ -179,8 +184,9 @@ function App() {
         picture: updatedUser.picture,
       });
 
-      if (response?.data?.user) {
-        setUser(response.data.user);
+      const responseUser = response?.user ?? response?.data?.user;
+      if (responseUser) {
+        setUser(responseUser);
       }
     } catch (error) {
       console.error('Profile update failed:', error);

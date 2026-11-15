@@ -5,7 +5,7 @@
 }
 
 .support-shell {
-  width: min(100%, var(--content-max));
+  width: min(100%, var(--content-max, 75rem));
   margin: 0 auto;
   padding: var(--space-4) 0 var(--space-12);
 }
@@ -350,14 +350,14 @@
 }
 
 .support-feedback.success {
-  border: 1px solid rgba(21, 128, 61, 0.2);
-  background: rgba(21, 128, 61, 0.08);
+  border: 1px solid rgba(14, 107, 79, 0.22);
+  background: rgba(14, 107, 79, 0.08);
   color: var(--color-success);
 }
 
 .support-feedback.error {
-  border: 1px solid rgba(180, 35, 24, 0.2);
-  background: rgba(180, 35, 24, 0.08);
+  border: 1px solid rgba(163, 42, 34, 0.22);
+  background: rgba(163, 42, 34, 0.08);
   color: var(--color-error);
 }
 
@@ -368,7 +368,7 @@
   display: grid;
   place-items: center;
   padding: var(--space-4);
-  background: rgba(15, 23, 42, 0.48);
+  background: rgba(23, 33, 28, 0.42);
 }
 
 .support-popup-card {
@@ -389,7 +389,7 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: rgba(21, 128, 61, 0.1);
+  background: rgba(14, 107, 79, 0.10);
   color: var(--color-success);
 }
 
@@ -465,4 +465,16 @@
   .support-submit {
     width: 100%;
   }
+}
+
+
+/* Shared accessible focus treatment */
+.support-screen :is(button, a, input, textarea, select):focus-visible {
+  outline: 3px solid var(--color-focus, #1f4fd8);
+  outline-offset: 2px;
+}
+
+@media (min-width: 76rem) {
+  .support-shell { padding-top: var(--space-5); }
+  .support-hero { padding-block: var(--space-8) var(--space-6); }
 }

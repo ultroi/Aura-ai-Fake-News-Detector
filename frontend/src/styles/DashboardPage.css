@@ -67,32 +67,6 @@
   --dash-transition: 150ms ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --dash-bg: #101613;
-    --dash-surface: #171f1b;
-    --dash-border: #2e3a34;
-    --dash-rule: #e8eee9;
-
-    --dash-text: #e8eee9;
-    --dash-text-muted: #a5b2aa;
-
-    --dash-primary: #e8eee9;
-    --dash-primary-hover: #ffffff;
-    --dash-on-primary: #101613;
-
-    --dash-highlight: #e3c84e;
-    --dash-on-highlight: #101613;
-
-    --dash-supported: #5fd3a6;
-    --dash-partial: #e0b04a;
-    --dash-unsupported: #f08a80;
-    --dash-unverifiable: #a5b2aa;
-
-    --dash-focus: #8fb4ff;
-  }
-}
-
 /* 2. Base
    -------------------------------------------------------------------------- */
 .dashboard {

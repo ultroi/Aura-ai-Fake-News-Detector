@@ -1,55 +1,1132 @@
-.chat-container {
+/*
+ * Aura AI workspace theme
+ * Matches DashboardPage/AuthPage's paper + ink palette, dark-green actions,
+ * thin rules, and restrained surfaces. Scoped to the chat workspace so the
+ * dashboard, auth, settings, and support pages retain their own styling.
+ */
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) {
+  --workspace-bg: #edf0ea;
+  --workspace-surface: #f8faf6;
+  --workspace-card: #ffffff;
+  --workspace-border: #c3ccc0;
+  --workspace-border-soft: #dfe5dd;
+  --workspace-rule: #17211c;
+  --workspace-text: #17211c;
+  --workspace-muted: #47544d;
+  --workspace-subtle: #68736d;
+  --workspace-primary: #17342b;
+  --workspace-primary-hover: #0e211b;
+  --workspace-on-primary: #ffffff;
+  --workspace-highlight: #f5dc6b;
+  --workspace-danger: #a32a22;
+  --workspace-danger-bg: #f8e9e6;
+  --workspace-focus: #6e8b79;
+  --sidebar-width: 19rem;
+
+  color-scheme: light;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--workspace-bg);
+  color: var(--workspace-text);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) *,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) *::before,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) *::after {
+  box-sizing: border-box;
+}
+
+/* Main shell and top bar -------------------------------------------------- */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .main-content {
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex: 1 1 auto;
+  background: var(--workspace-bg);
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .top-bar {
+  min-height: 4.25rem;
+  padding: 0.65rem clamp(1rem, 3vw, 2.25rem);
+  gap: 1rem;
+  border-bottom: 2px solid var(--workspace-rule);
+  background: var(--workspace-bg);
+  box-shadow: none;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .app-branding {
+  gap: 0.65rem;
+  color: var(--workspace-text);
+  text-decoration: none;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .app-logo {
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--workspace-border);
+  border-radius: 3px;
+  background: var(--workspace-surface);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .app-brand-text {
+  color: var(--workspace-text);
+  font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sidebar-toggle-button,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sidebar-close-button {
+  border: 1px solid var(--workspace-border);
+  border-radius: 3px;
+  background: var(--workspace-surface);
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sidebar-toggle-button:hover,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sidebar-close-button:hover {
+  border-color: var(--workspace-rule);
+  background: var(--workspace-card);
+  color: var(--workspace-primary);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) :is(button, a, input, textarea, select):focus-visible {
+  outline: 3px solid var(--workspace-focus);
+  outline-offset: 2px;
+}
+
+/* Sidebar ---------------------------------------------------------------- */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sidebar {
+  border-right: 1px solid var(--workspace-border);
+  background: var(--workspace-surface);
+  color: var(--workspace-text);
+  box-shadow: 8px 0 28px rgba(23, 33, 28, 0.035);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sidebar-header {
+  padding: 1rem;
+  border-bottom: 2px solid var(--workspace-rule);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .new-chat-button {
+  min-height: 2.65rem;
+  border: 1px solid var(--workspace-primary);
+  border-radius: 3px;
+  background: var(--workspace-primary);
+  color: var(--workspace-on-primary);
+  box-shadow: none;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .new-chat-button:hover {
+  border-color: var(--workspace-primary-hover);
+  background: var(--workspace-primary-hover);
+  transform: none;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .recent-chats-header h2 {
+  color: var(--workspace-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .recent-chats-empty {
+  border-color: var(--workspace-border);
+  border-radius: 3px;
+  color: var(--workspace-muted);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-group-label {
+  color: var(--workspace-subtle);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-item {
+  border-radius: 3px;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-item:hover {
+  border-color: var(--workspace-border-soft);
+  background: #eef2ec;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-item.active {
+  border-color: #aebdb0;
+  background: #e2e9e1;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-item-title,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-delete-message {
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-item-meta,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-group-label {
+  color: var(--workspace-muted);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-item-menu {
+  color: var(--workspace-muted);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-item-menu:hover,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-menu-item:hover {
+  background: #e8eee7;
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-menu-dropdown,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-menu {
+  border-color: var(--workspace-border);
+  border-radius: 4px;
+  background: var(--workspace-card);
+  color: var(--workspace-text);
+  box-shadow: 0 12px 32px rgba(23, 33, 28, 0.12);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-menu-item,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-rename-input,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-rename-button,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-delete-button {
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-rename-input {
+  border-color: var(--workspace-border);
+  border-radius: 3px;
+  background: #fff;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-rename-button-confirm {
+  background: var(--workspace-primary);
+  color: #fff;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-menu-item-delete,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-delete-button-confirm {
+  color: var(--workspace-danger);
+}
+
+/* Account menu ----------------------------------------------------------- */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-avatar-button,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-avatar {
+  border-color: var(--workspace-border);
+  background: #e5ebe3;
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-avatar-button:hover,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-avatar-button:focus-visible {
+  border-color: var(--workspace-primary);
+  box-shadow: 0 0 0 3px rgba(23, 52, 43, 0.12);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-name,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-item {
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-email,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-icon {
+  color: var(--workspace-muted);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-divider {
+  background: var(--workspace-border-soft);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-item:hover,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .settings-dropdown-item:focus-visible {
+  background: #edf2eb;
+}
+
+/* Welcome / empty workspace --------------------------------------------- */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .initial-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--workspace-bg);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .welcome-screen {
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .welcome-screen h1,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .empty-state-title {
+  color: var(--workspace-text);
+  font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .welcome-subtitle {
+  max-width: 38rem;
+  color: var(--workspace-muted);
+  line-height: 1.65;
+}
+
+/* Conversation view ------------------------------------------------------ */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-container {
   min-height: 0;
   flex: 1 1 auto;
-  overflow-y: auto;
-  padding: var(--space-6) clamp(var(--space-4), 4vw, var(--space-8));
-  scroll-padding-bottom: var(--space-6);
+  padding: clamp(1.25rem, 3.4vw, 2.75rem) clamp(1rem, 5vw, 4rem);
+  scroll-padding-bottom: 2rem;
+  background: var(--workspace-bg);
+  color: var(--workspace-text);
+  overscroll-behavior: contain;
 }
 
-.chat-container::-webkit-scrollbar,
-.sources-list::-webkit-scrollbar {
-  width: 0.5rem;
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .messages-list {
+  width: min(100%, 54rem);
+  gap: clamp(1.25rem, 3vw, 2rem);
 }
 
-.chat-container::-webkit-scrollbar-thumb,
-.sources-list::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
-  border-radius: 999px;
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message {
+  gap: 0.1rem;
 }
 
-.empty-state {
-  min-height: 100%;
-  display: grid;
-  place-items: center;
-  padding: var(--space-12) 0;
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-bubble {
+  max-width: min(100%, 46rem);
+  padding: clamp(0.9rem, 2vw, 1.25rem);
+  border: 1px solid var(--workspace-border);
+  border-radius: 5px;
+  color: var(--workspace-text);
+  box-shadow: none;
+  line-height: 1.65;
 }
 
-.empty-state-content {
-  width: min(100%, 44rem);
-  text-align: center;
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .user-bubble {
+  border-color: var(--workspace-primary);
+  border-bottom-right-radius: 2px;
+  background: var(--workspace-primary);
+  color: #fff;
 }
 
-.empty-state-title {
-  margin: 0;
-  color: var(--color-text);
-  font-size: var(--text-2xl);
-  line-height: 1.15;
-  letter-spacing: -0.035em;
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .ai-bubble {
+  border-bottom-left-radius: 2px;
+  background: var(--workspace-card);
+  color: var(--workspace-text);
 }
 
-.messages-list {
-  width: min(100%, var(--reading-max));
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-bubble:hover {
+  box-shadow: 0 4px 14px rgba(23, 33, 28, 0.045);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-content {
+  color: inherit;
+  font-size: 0.98rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-content a,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .source-url-link {
+  color: #175d43;
+  text-underline-offset: 0.16em;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .user-bubble .message-content a {
+  color: #fff;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-content pre {
+  border-color: var(--workspace-border);
+  border-radius: 3px;
+  background: #f0f3ee;
+  color: #17211c;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-content code {
+  background: #edf1eb;
+  color: #17342b;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-content pre code {
+  background: transparent;
+  color: inherit;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .assistant-summary {
+  border-bottom-color: var(--workspace-border-soft);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .assistant-reasoning,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .source-url-section,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sources-section {
+  border-top-color: var(--workspace-border-soft);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .reasoning-label,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .reasoning-text,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sources-label,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-timestamp {
+  color: var(--workspace-muted);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sources-count {
+  border: 1px solid var(--workspace-border);
+  background: #edf2eb;
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sources-toggle {
+  color: var(--workspace-primary);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .source-item {
+  border-color: var(--workspace-border-soft);
+  border-radius: 3px;
+  background: #f7f9f5;
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .source-item:hover {
+  border-color: var(--workspace-border);
+  background: #edf2eb;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .source-icon {
+  background: #e7eee5;
+  color: var(--workspace-primary);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .source-url {
+  color: var(--workspace-muted);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-actions {
+  gap: 0.25rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .icon-action {
+  border-radius: 3px;
+  color: var(--workspace-muted);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .icon-action:hover {
+  border-color: var(--workspace-border);
+  background: var(--workspace-surface);
+  color: var(--workspace-primary);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message.error .ai-bubble {
+  border-color: #d8aaa4;
+  background: #fff9f8;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .typing-indicator {
+  border-color: var(--workspace-border);
+  border-radius: 4px;
+  background: var(--workspace-card);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .typing-indicator span {
+  background: var(--workspace-primary);
+}
+
+/* Composer ---------------------------------------------------------------- */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-area {
+  width: min(calc(100% - clamp(2rem, 8vw, 8rem)), 54rem);
+  padding: 0.75rem 0 1.25rem;
+  gap: 0.5rem;
+  background: var(--workspace-bg);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container {
+  min-height: 3.65rem;
+  padding: 0.4rem;
+  border: 1px solid #aebdb0;
+  border-radius: 5px;
+  background: var(--workspace-card);
+  box-shadow: 0 5px 18px rgba(23, 33, 28, 0.055);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container:focus-within,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container.focused {
+  border-color: var(--workspace-primary);
+  box-shadow: 0 0 0 3px rgba(23, 52, 43, 0.1), 0 5px 18px rgba(23, 33, 28, 0.055);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-textarea {
+  color: var(--workspace-text);
+  font-size: 0.98rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-textarea::placeholder {
+  color: var(--workspace-subtle);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container .icon-button {
+  border-radius: 3px;
+  color: var(--workspace-muted);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container .icon-button:hover {
+  background: #edf2eb;
+  color: var(--workspace-primary);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .send-button {
+  border-color: var(--workspace-primary);
+  border-radius: 3px;
+  background: var(--workspace-primary);
+  color: #fff;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .send-button:hover:not(:disabled) {
+  border-color: var(--workspace-primary-hover);
+  background: var(--workspace-primary-hover);
+  transform: translateY(-1px);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .send-button.processing {
+  border-color: var(--workspace-danger);
+  background: var(--workspace-danger);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-hint {
+  color: var(--workspace-muted);
+  font-size: 0.75rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .attachments-preview .attachment-item {
+  border-color: var(--workspace-border);
+  border-radius: 3px;
+  background: #fff;
+}
+
+/* Keep the theme comfortable on narrow screens --------------------------- */
+@media (max-width: 48rem) {
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .top-bar {
+    min-height: 3.85rem;
+    padding: 0.55rem 0.85rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-container {
+    padding: 1rem 0.85rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-area {
+    width: calc(100% - 1.5rem);
+    padding-bottom: 0.8rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-bubble {
+    max-width: 96%;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-actions {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 36rem) {
-  .chat-container {
-    padding-inline: var(--space-3);
-    padding-top: var(--space-4);
-    padding-bottom: var(--space-4);
-    scroll-padding-bottom: var(--space-4);
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .app-brand-text {
+    display: inline;
+    font-size: 1.1rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .message-bubble {
+    max-width: 100%;
+    padding: 0.85rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .sources-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container {
+    gap: 0.25rem;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) *,
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) *::before,
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========================================================================
+   Conversation layout refinement
+   - The workspace uses the full viewport; only the transcript scrolls.
+   - Transcript and composer share a readable 48rem column, like ChatGPT.
+   - AI replies read like document content; user prompts remain softly tinted.
+   - The empty state is centered above the same bottom composer.
+   ======================================================================== */
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .main-content {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .top-bar {
+  position: relative;
+  top: auto;
+  z-index: 20;
+  flex: 0 0 4.25rem;
+  min-height: 4.25rem;
+  padding: 0.55rem clamp(0.9rem, 2.2vw, 1.6rem);
+  border-bottom: 1px solid var(--workspace-border);
+  background: rgba(237, 240, 234, 0.96);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Empty/new conversation: compact title + centered composer. */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .initial-container {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: clamp(1.25rem, 4vh, 2.5rem) 1rem 1.25rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .welcome-screen {
+  width: min(100%, 48rem);
+  margin: 0 auto;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  transform: translateY(-1.25rem);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .welcome-screen h1 {
+  max-width: 100%;
+  margin: 0;
+  color: var(--workspace-text);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: clamp(1.55rem, 2.35vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.22;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .welcome-subtitle {
+  margin: 0.65rem 0 0;
+  color: var(--workspace-muted);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .main-input-area {
+  width: 100%;
+  margin-top: clamp(1.35rem, 3.5vh, 2rem);
+}
+
+/* Conversation transcript: one reading column, independent scrolling. */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .chat-container {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: clamp(1.25rem, 3.5vh, 2.35rem) clamp(1rem, 3vw, 2rem) 0.5rem;
+  scroll-padding-top: 1rem;
+  scroll-padding-bottom: 1.25rem;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--workspace-border) transparent;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .chat-container::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--workspace-border);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .messages-list {
+  width: min(100%, 48rem);
+  min-width: 0;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.35rem, 3.2vh, 2rem);
+  padding: 0 0 1.25rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-bubble {
+  max-width: min(100%, 44rem);
+  padding: 0.9rem 1.05rem;
+  border: 1px solid transparent;
+  border-radius: 1.15rem;
+  line-height: 1.7;
+  box-shadow: none;
+  overflow-wrap: anywhere;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+/* Keep the user prompt distinct without making it a large dark block. */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .user-bubble {
+  width: fit-content;
+  max-width: min(82%, 38rem);
+  padding: 0.78rem 1rem;
+  border-color: #d5e0d2;
+  border-radius: 1.2rem 1.2rem 0.35rem 1.2rem;
+  background: #e4ece1;
+  color: var(--workspace-text);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .user-bubble:hover {
+  background: #dce7d9;
+}
+
+/* Assistant output should read like ChatGPT prose, not a white alert card. */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .ai-bubble {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--workspace-text);
+  box-shadow: none;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-content {
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1.78;
+  overflow-wrap: anywhere;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-content strong {
+  font-weight: 680;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-content ul,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-content ol {
+  margin: 0.6rem 0;
+  padding-left: 1.4rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-content li + li {
+  margin-top: 0.25rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-content pre {
+  max-width: 100%;
+  padding: 1rem;
+  border: 1px solid var(--workspace-border-soft);
+  border-radius: 0.8rem;
+  background: #f7f9f5;
+  color: var(--workspace-text);
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-content code {
+  border-radius: 0.3rem;
+  background: #e8eee6;
+  color: #17342b;
+  font-size: 0.9em;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-content pre code {
+  background: transparent;
+  color: inherit;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .assistant-summary {
+  margin-bottom: 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--workspace-border-soft);
+  border-left: 3px solid var(--workspace-primary);
+  border-radius: 0.65rem;
+  background: var(--workspace-surface);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .assistant-reasoning,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .source-url-section,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .sources-section {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--workspace-border-soft);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .reasoning-label,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .reasoning-text {
+  line-height: 1.7;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .sources-wrapper {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem 1rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .source-item {
+  min-width: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--workspace-border-soft);
+  border-radius: 0.65rem;
+  background: #f8faf6;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-timestamp {
+  margin-top: 0.45rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  opacity: 0.7;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .user-message .message-timestamp {
+  color: #526358;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-meta {
+  margin-top: 0.05rem;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-actions {
+  gap: 0.2rem;
+  opacity: 0.65;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message:hover .message-actions,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message:focus-within .message-actions {
+  opacity: 1;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .icon-action {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+}
+
+/* Errors remain clearly visible, but match the same component geometry. */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message.error .ai-bubble {
+  width: fit-content;
+  max-width: min(100%, 44rem);
+  padding: 0.85rem 1rem;
+  border: 1px solid #e4b6b0;
+  border-radius: 0.75rem;
+  background: #fff8f7;
+  color: #6f2822;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .typing-indicator {
+  width: 3.8rem;
+  min-height: 2.6rem;
+  border: 1px solid var(--workspace-border-soft);
+  border-radius: 1rem;
+  background: var(--workspace-card);
+  box-shadow: 0 2px 8px rgba(23, 33, 28, 0.04);
+}
+
+/* Composer: one consistent 48rem column at the bottom of the viewport. */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-area {
+  position: relative;
+  z-index: 5;
+  width: min(calc(100% - clamp(1.5rem, 5vw, 3rem)), 48rem);
+  min-width: 0;
+  flex: 0 0 auto;
+  margin: 0 auto;
+  padding: 0.55rem 0 max(0.8rem, env(safe-area-inset-bottom));
+  gap: 0.45rem;
+  background: var(--workspace-bg);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-box-container {
+  width: 100%;
+  min-height: 3.8rem;
+  grid-template-columns: 2.6rem minmax(0, 1fr) 2.6rem;
+  align-items: end;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  border: 1px solid #c3cec0;
+  border-radius: 1.45rem;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(23, 33, 28, 0.055);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-box-container:focus-within,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-box-container.focused {
+  border-color: #769080;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(23, 52, 43, 0.09), 0 6px 20px rgba(23, 33, 28, 0.06);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-box-container .icon-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  align-self: end;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--workspace-muted);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-box-container .icon-button:hover {
+  background: #edf2eb;
+  color: var(--workspace-primary);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-textarea {
+  min-height: 2.7rem;
+  max-height: 9.4rem;
+  padding: 0.55rem 0.3rem;
+  color: var(--workspace-text);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-textarea::placeholder {
+  color: #7b857e;
+  opacity: 1;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .send-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  align-self: end;
+  border: 1px solid var(--workspace-primary);
+  border-radius: 50%;
+  background: var(--workspace-primary);
+  color: #fff;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .send-button:hover:not(:disabled) {
+  border-color: var(--workspace-primary-hover);
+  background: var(--workspace-primary-hover);
+  transform: translateY(-1px);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .send-button:disabled {
+  border-color: #d3dbd1;
+  background: #d3dbd1;
+  color: #fff;
+  opacity: 1;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-hint {
+  margin: 0.05rem 0 0;
+  color: #718078;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .attachments-preview .attachment-item {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 0.7rem;
+}
+
+/* Tablet / mobile: reclaim space and keep touch targets usable. */
+@media (max-width: 48rem) {
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .top-bar {
+    flex-basis: 3.9rem;
+    min-height: 3.9rem;
+    padding-inline: 0.85rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .chat-container {
+    padding: 1.2rem 0.9rem 0.4rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .messages-list {
+    gap: 1.35rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-area {
+    width: calc(100% - 1.5rem);
+    padding-top: 0.45rem;
+    padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-actions {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 36rem) {
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .app-brand-text {
+    display: inline;
+    font-size: 1.05rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .welcome-screen {
+    transform: translateY(-0.5rem);
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .welcome-screen h1 {
+    font-size: clamp(1.45rem, 6vw, 1.75rem);
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-bubble,
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .user-bubble {
+    max-width: 94%;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .ai-bubble {
+    max-width: 100%;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .sources-wrapper {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-box-container {
+    min-height: 3.55rem;
+    grid-template-columns: 2.35rem minmax(0, 1fr) 2.35rem;
+    gap: 0.15rem;
+    padding: 0.3rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-box-container .icon-button,
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .send-button {
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-textarea {
+    font-size: 0.93rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-hint {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-height: 680px) and (min-width: 48.01rem) {
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .chat-container {
+    padding-top: 1.1rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-area {
+    padding-top: 0.35rem;
+    padding-bottom: 0.55rem;
+  }
+
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .welcome-screen {
+    transform: translateY(-0.4rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .message-bubble,
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen):has(> .main-content) .input-box-container {
+    transition: none;
+  }
+}
+
+/* Composer focus: keep the focus state on the outer composer, not the textarea.
+   This removes the browser/global bright-blue rectangle while retaining a subtle
+   green focus indication around the full input container for keyboard users. */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container .input-textarea:focus,
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container .input-textarea:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .input-box-container:focus-within {
+  border-color: #769080;
+  box-shadow: 0 0 0 2px rgba(23, 52, 43, 0.08), 0 5px 18px rgba(23, 33, 28, 0.055);
+}
+
+/* Jump-to-latest control (Gemini/ChatGPT-style) ---------------------------- */
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-viewport {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-viewport > .chat-container {
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-scroll-to-bottom {
+  position: absolute;
+  z-index: 15;
+  left: 0;
+  right: 0;
+  bottom: 1rem;
+  margin-inline: auto;
+  width: 2.65rem;
+  height: 2.65rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #c3cec0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #17342b;
+  box-shadow: 0 3px 14px rgba(23, 33, 28, 0.14);
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-scroll-to-bottom:hover {
+  border-color: #9eafa0;
+  background: #f8faf6;
+  box-shadow: 0 5px 18px rgba(23, 33, 28, 0.18);
+}
+
+.app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-scroll-to-bottom:focus-visible {
+  outline: 2px solid #6e8b79;
+  outline-offset: 3px;
+}
+
+@media (max-width: 48rem) {
+  .app:not(.auth-app-screen):not(.settings-app-screen):not(.support-app-screen) .chat-scroll-to-bottom {
+    bottom: 0.75rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+

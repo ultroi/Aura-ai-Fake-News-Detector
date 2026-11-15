@@ -18,11 +18,17 @@ const list = (value, fallback) => {
   return values.length ? values : fallback;
 };
 
+const deploymentOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
+].filter(Boolean);
+
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: toInt(process.env.PORT, 5000),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
-  corsOrigins: list(process.env.CORS_ORIGINS || process.env.FRONTEND_URL, [
+  corsOrigins: list(process.env.CORS_ORIGINS, [...deploymentOrigins,
     'http://localhost:5173',
     'http://localhost:3000',
   ]),
@@ -30,6 +36,7 @@ const env = {
   jwtSecret: process.env.JWT_SECRET || 'development-only-secret-change-me',
   jwtExpire: process.env.JWT_EXPIRE || '7d',
   cookieName: process.env.COOKIE_NAME || 'token',
+  cookieSameSite: String(process.env.COOKIE_SAME_SITE || 'lax').toLowerCase(),
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
 
   groqApiKey: process.env.GROQ_API_KEY || '',
@@ -64,6 +71,15 @@ const validateRuntimeConfig = () => {
   if (!env.mongoUri) warnings.push('MONGODB_URI');
   if (!env.groqApiKey && !env.geminiApiKey) warnings.push('GROQ_API_KEY or GEMINI_API_KEY');
   if (!env.tavilyApiKey) warnings.push('TAVILY_API_KEY');
+
+  if (env.nodeEnv === 'production') {
+    const missing = [];
+    if (!process.env.MONGODB_URI) missing.push('MONGODB_URI');
+    if (!process.env.JWT_SECRET || env.jwtSecret === 'development-only-secret-change-me') missing.push('JWT_SECRET');
+    if (!env.groqApiKey && !env.geminiApiKey) missing.push('GROQ_API_KEY or GEMINI_API_KEY');
+    if (!env.tavilyApiKey) missing.push('TAVILY_API_KEY');
+    if (missing.length) throw new Error(`Missing production configuration: ${missing.join(', ')}`);
+  }
 
   if (warnings.length) {
     console.warn(`[config] Optional/development configuration missing: ${warnings.join(', ')}`);
