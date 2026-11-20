@@ -4,6 +4,7 @@ const errorHandler = (err, req, res, _next) => {
   console.error('[api:error]', {
     method: req.method,
     path: req.originalUrl,
+    origin: req.get('origin') || null,
     message: err.message,
   });
 

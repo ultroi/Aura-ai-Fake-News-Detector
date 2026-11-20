@@ -23,15 +23,22 @@ const deploymentOrigins = [
   process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
   process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
 ].filter(Boolean);
+const configuredCorsOrigins = String(process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const corsOrigins = [...new Set([
+  ...deploymentOrigins,
+  ...configuredCorsOrigins,
+  'http://localhost:5173',
+  'http://localhost:3000',
+])];
 
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: toInt(process.env.PORT, 5000),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
-  corsOrigins: list(process.env.CORS_ORIGINS, [...deploymentOrigins,
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ]),
+  corsOrigins,
   mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/aura-ai',
   jwtSecret: process.env.JWT_SECRET || 'development-only-secret-change-me',
   jwtExpire: process.env.JWT_EXPIRE || '7d',
