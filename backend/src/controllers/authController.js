@@ -24,7 +24,13 @@ const googleLogin = async (req, res, next) => {
     const token = String(req.body.token || '').trim();
     if (!token) return failure(res, 400, 'Google token is required');
 
-    const ticket = await googleClient.verifyIdToken({ idToken: token, audience: env.googleClientId });
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({ idToken: token, audience: env.googleClientId });
+    } catch (error) {
+      error.statusCode = 401;
+      return next(error);
+    }
     const payload = ticket.getPayload();
     if (!payload?.email || !payload?.sub) return failure(res, 400, 'Unable to extract Google account details');
 
@@ -50,7 +56,6 @@ const googleLogin = async (req, res, next) => {
     setAuthCookie(res, signToken(user._id));
     return success(res, 200, 'Google login successful', { user: publicUser(user) });
   } catch (error) {
-    error.statusCode = 401;
     next(error);
   }
 };

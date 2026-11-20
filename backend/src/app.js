@@ -3,6 +3,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { env } = require('./config/env');
+const { connectDatabase } = require('./config/database');
 const { globalLimiter, authLimiter } = require('./middleware/rateLimiter');
 const authRoutes = require('./routes/authRoutes');
 const analysisRoutes = require('./routes/analysisRoutes');
@@ -56,6 +57,20 @@ app.get('/', (_req, res) => res.json({
   },
 }));
 
+// Vercel can invoke the Express app without running server.js. Establish the
+// cached Mongoose connection before any route that reads or writes data.
+const requireDatabase = async (_req, _res, next) => {
+  try {
+    await connectDatabase();
+    next();
+  } catch (error) {
+    error.statusCode = 503;
+    next(error);
+  }
+};
+
+app.use('/auth', requireDatabase);
+app.use('/analyze', requireDatabase);
 app.use('/auth', authLimiter, authRoutes);
 app.use('/analyze', analysisRoutes);
 
